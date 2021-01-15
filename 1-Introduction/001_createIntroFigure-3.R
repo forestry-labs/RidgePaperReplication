@@ -1,5 +1,5 @@
 # devtools::install_github("soerenkuenzel/forestry")
-setwd("~/Dropbox/RidgeForestry_paper/figures/001_IntroFigure/")
+setwd("~/Dropbox/RidgePaperReplication/1-Introduction")
 set.seed(534325421)
 library(tidyverse)
 library(reshape)

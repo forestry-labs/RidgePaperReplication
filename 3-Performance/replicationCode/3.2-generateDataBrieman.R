@@ -1,16 +1,11 @@
-try(setwd("~/Dropbox/ridgeEvaluation/"), silent = TRUE)
-
-
 library(MASS)
 library(gclus)
 library(forestry)
 
-datasets_grid <- list()
-
 data(ozone)
 Boston
-servo <- read.csv("replicationCode/servo.csv", header = TRUE)
-abalone <- read.csv("replicationCode/abalone.csv")
+servo <- read.csv("replicationCode/data/servo.csv", header = TRUE)
+abalone <- read.csv("replicationCode/data/abalone.csv")
 
 set.seed(3984938)
 

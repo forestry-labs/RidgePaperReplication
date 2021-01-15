@@ -1,21 +1,9 @@
-if (dir.exists("~/Dropbox/ridgeEvaluation/")) {
-  setwd("~/Dropbox/ridgeEvaluation/")
-} else if (dir.exists("~/ridgeEvaluationCode/")) {
-  setwd("~/ridgeEvaluationCode/")
-} else if (dir.exists("~/ridgeEvaluation/")) {
-  setwd("~/ridgeEvaluation/")
-} else if (dir.exists("/accounts/projects/sekhon/theo_s/gdrive/ridgeEvaluation")) {
-  setwd("/accounts/projects/sekhon/theo_s/gdrive/ridgeEvaluation")
-} else {
-  stop("wd was not set correctly")
-}
 library(tidyverse)
 library(xtable)
 library(ztable)
 library(magrittr)
 library(RColorBrewer)
 library(superheat)
-
 
 options(ztable.type="latex")
 
@@ -92,11 +80,10 @@ print(
   sanitize.colnames.function = identity,
   sanitize.text.function = identity,
   latex.environments = "flushleft",
-  file = "~/Dropbox/RidgeForestry_paper/tables/datasetTables.tex"
+  file = "~/Dropbox/RidgePaperReplication/3-Performance/figures/datasetTables.tex"
 )
 
 # Output information about the performance -------------------------------------
-# Run from here to get superheat table -----------------------------------------
 library(tidyverse)
 library(xtable)
 library(ztable)
@@ -180,8 +167,6 @@ z <- rbind(z, mean_rank_data[1,])
 # Create mean rank =============================================================
 
 names(z)
-
-
 k <- z
 k[,2] <- z[,4]
 k[,4] <- z[,2]
@@ -237,33 +222,3 @@ superheat(data.matrix(a),
           left.label.text.size = 11,
           bottom.label.text.size = 8)
 dev.off()
-
-
-# OLD code / If we need ztable =================================================
-z <- ztable(-data.matrix(q))
-
-z %>% superheat() %>% print(caption="Table 4. Heatmap Table")
-
-print(z)
-
-#, palette = "Greens",cols=c(2,3,4,5,6,7,8,9),margin=1, reverse = TRUE
-
-print(superheat(z) %>%
-        print(caption="Table 3. Performance on Real Datasets"))
-
-for (i in 2:nrow(X_toprint_char)) {
-  # i <- 2
-  X_toprint_char[i, minimizer_pos[i - 1]] <-
-    paste0("\\textbf{", X_toprint_char[i, minimizer_pos[i - 1]], "}")
-}
-dir.create("~/Dropbox/RidgeForestry_paper/tables/", showWarnings = FALSE)
-print(
-  xtable(X_toprint_char, align = rep('r', ncol(X_toprint_char) + 1), 
-         caption = "Performance of the estimators.", label = "tbl:performance"),
-  include.rownames = FALSE,
-  # include.colnames = FALSE, 
-  sanitize.colnames.function = identity,
-  sanitize.text.function = identity,
-  latex.environments = "flushleft",
-  file = "~/Dropbox/RidgeForestry_paper/tables/performanceTables.tex"
-)

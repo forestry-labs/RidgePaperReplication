@@ -1,5 +1,3 @@
-# try(setwd("~/Dropbox/ridgeEvaluation/"), silent = TRUE)
-
 library(forestry)
 library(MASS)
 
@@ -12,6 +10,7 @@ sd <- 1
 p <- 10
 x <- matrix(rnorm(p * n), nrow = n, ncol = p)
 
+datasets_grid <- list()
 # Artificially created data sets -----------------------------------------------
 # Dataset #1 Linear ------------------------------------------------------------
 b <- rep(0, p)

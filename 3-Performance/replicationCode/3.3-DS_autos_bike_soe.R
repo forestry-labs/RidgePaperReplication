@@ -1,5 +1,3 @@
-try(setwd("~/Dropbox/ridgeEvaluation/"), silent = TRUE)
-
 library(tidyverse)
 library(ggplot2)
 library(readr)
@@ -7,7 +5,7 @@ library(readr)
 set.seed(6318154)
 
 # Import autos -----------------------------------------------------------------
-autos <- read_csv("replicationCode/autos.csv")
+autos <- read_csv("replicationCode/data/autos.csv")
 autos$seller <- as.factor(autos$seller)
 autos$abtest <- as.factor(autos$abtest)
 autos$gearbox <- as.factor(autos$gearbox)
@@ -71,7 +69,7 @@ datasets_grid[["autos"]] <- list(
 
 # Import bike ------------------------------------------------------------------
 
-bike <- read_csv("replicationCode/bike.csv")
+bike <- read_csv("replicationCode/data/bike.csv")
 
 
 
@@ -100,6 +98,3 @@ colnames(bike) <- gsub("=", "", colnames(bike))
 datasets_grid[["bike"]] <- list(
   "train" = bike[train_id, ],
   "test" = bike[test_id, ])
-
-# str(datasets_grid)
-# print(names(datasets_grid))
