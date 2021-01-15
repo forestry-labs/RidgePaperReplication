@@ -1,0 +1,2 @@
+"Dataset","Estimator","EMSE","runtime"
+"artificial-LM-512","glmnet",0.192595702274085,17.560763847

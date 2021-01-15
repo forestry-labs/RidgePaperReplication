@@ -206,15 +206,15 @@ data.frame(
   Signal = Y, 
   GRF = pred_grf,
   Linear_forestry = pred_forestry
-) %>% melt(id = "x") %>%
-  ggplot(aes(x = x, y = value, color = variable)) + 
+)  %>% melt(id = "x") %>% rename(c(x = "x", variable = "Estimator", value = "y")) %>%
+  ggplot(aes(x = x, y = y, color = Estimator)) + 
   geom_line() +
   scale_color_manual(values = c("Signal" = "blue", 
                                 "Linear_forestry" = "green", 
                                 "GRF" = "red")) +
   theme_bw()
 
-ggsave("~/Downloads/lrf_grf_comparison.pdf", width = 8, height = 8)
+ggsave("~/Downloads/lrf_grf_comparison.pdf", width = 9, height = 5)
 
 
 
