@@ -1,3 +1,4 @@
 # RidgePaperReplication
 
-This repository contains the necessary code to replicate the results from "Linear Aggregation in Tree-based Estimator" https://arxiv.org/abs/1906.06463.
+This repository contains the necessary code to replicate the results from the most recent version of the paper: "Linear Aggregation in Tree-based Estimators." 
+This draft can be found at: https://arxiv.org/abs/1906.06463.
