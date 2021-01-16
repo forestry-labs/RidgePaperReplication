@@ -1,7 +1,7 @@
 # devtools::install_github("soerenkuenzel/causalToolbox")
-# devtools::install_github("soerenkuenzel/forestry", ref = "splitting-features")
-devtools::load_all("~/Dropbox/forestry/")
-library(forestry)
+# devtools::install_github("forestry-labs/Rforestry", ref = "splitting-features")
+devtools::load_all("~/Dropbox/Rforestry/")
+library(Rforestry)
 library(visNetwork)
 library(tidyverse)
 

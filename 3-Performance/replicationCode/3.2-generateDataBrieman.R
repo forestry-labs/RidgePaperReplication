@@ -1,6 +1,6 @@
 library(MASS)
 library(gclus)
-library(forestry)
+library(Rforestry)
 
 data(ozone)
 Boston

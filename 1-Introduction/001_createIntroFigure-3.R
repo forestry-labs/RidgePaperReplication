@@ -3,7 +3,7 @@ setwd("~/Dropbox/RidgePaperReplication/1-Introduction")
 set.seed(534325421)
 library(tidyverse)
 library(reshape)
-library(forestry)
+library(Rforestry)
 library(gridExtra)
 library(grid)
 library(ggplot2)
@@ -143,12 +143,3 @@ grid.arrange(p_fittedGP, p_histGP,
              ncol = 1, heights = c(3, 1.4))
 
 dev.off()
-
-
-
-
-
-
-
-
-

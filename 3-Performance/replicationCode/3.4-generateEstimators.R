@@ -49,7 +49,7 @@ estimator_grid[["forestryRF"]] <- function(Xobs,
                                            tune_length = 20,
                                            cv_fold = 8,
                                            note = NA) {
-  library(forestry)
+  library(Rforestry)
   library(caret)
   
   forestryRF <- list(
@@ -152,11 +152,11 @@ estimator_grid[["forestryRF"]] <- function(Xobs,
 
 # #Tuning Ridge RF --------------------------------------------------------------
 estimator_grid[["caretRidgeRF_nonstrict"]] <- function(Xobs,
-                                             Yobs,
-                                             tune_length = 200,
-                                             cv_fold = 8,
-                                             note = NA) {
-  library(forestry)
+                                                       Yobs,
+                                                       tune_length = 200,
+                                                       cv_fold = 8,
+                                                       note = NA) {
+  library(Rforestry)
   library(caret)
 
   ridgeRF <- list(
@@ -278,7 +278,7 @@ estimator_grid[["caretRidgeTree"]] <- function(Xobs,
                                                tune_length = 200,
                                                cv_fold = 8,
                                                note = NA) {
-  library(forestry)
+  library(Rforestry)
   library(caret)
   
   ridgeRF <- list(

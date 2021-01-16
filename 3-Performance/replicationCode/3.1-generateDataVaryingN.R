@@ -1,4 +1,4 @@
-library(forestry)
+library(Rforestry)
 library(MASS)
 
 
