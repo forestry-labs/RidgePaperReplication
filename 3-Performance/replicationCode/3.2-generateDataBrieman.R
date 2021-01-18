@@ -88,16 +88,16 @@ b <- cbind(b, Boston$y)
 
 flds <- caret::createFolds(Boston$y, k = 5, list = TRUE, returnTrain = FALSE)
 
-for (i in 1:length(flds)) {
-  # i = 1
-  test_id <- flds[[i]]
-  train_id <- (1:n)[!(1:n) %in% test_id]
-
-
-  datasets_grid[[paste0("aBoston_Housing_fold", i)]] <- list(
-    "train" = b[train_id, ],
-    "test" = b[test_id, ])
-}
+# for (i in 1:length(flds)) {
+#   # i = 1
+#   test_id <- flds[[i]]
+#   train_id <- (1:n)[!(1:n) %in% test_id]
+# 
+# 
+#   datasets_grid[[paste0("aBoston_Housing_fold", i)]] <- list(
+#     "train" = b[train_id, ],
+#     "test" = b[test_id, ])
+# }
 
 for (i in 1:length(flds)) {
   # i = 1
@@ -133,7 +133,7 @@ for (i in 1:length(flds)) {
 
 # Servo
 n <- nrow(servo)
-servo_onehot_translator <- onehot::onehot(servo)
+servo_onehot_translator <- onehot::onehot(servo, stringsAsFactors = TRUE)
 servo <- as.data.frame(predict(servo_onehot_translator, servo))
 test_id <- sort(sample(n, size = round(.1*n)))
 train_id <- (1:n)[!(1:n) %in% test_id]
@@ -158,7 +158,7 @@ for (i in 1:length(flds)) {
 
 
 # Abalone
-abalone_onehot_translator <- onehot::onehot(abalone)
+abalone_onehot_translator <- onehot::onehot(abalone, stringsAsFactors = TRUE)
 abalone <- as.data.frame(predict(abalone_onehot_translator, abalone))
 n <- nrow(abalone)
 
@@ -173,5 +173,5 @@ datasets_grid[["Abalone"]] <- list(
   "train" = abalone[train_id, ],
   "test" = abalone[test_id, ])
 
-str(datasets_grid)
-names(datasets_grid)
+# str(datasets_grid)
+# names(datasets_grid)
