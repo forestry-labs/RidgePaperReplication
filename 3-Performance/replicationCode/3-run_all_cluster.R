@@ -153,6 +153,32 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
                         Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
                         note = as.character(this_job$Dataset),
                         paramList = parameters)
+          
+        } else if (es_name %in% c("glmnet")) {
+          es <- loaded_model[[1]]$finalModel
+          parameters <- list("lambda" = es$lambda,
+                             "alpha" = es$tuneValue$alpha)
+          
+          es <- estimator_grid[[as.character(this_job$Estimator)]]
+          
+          es_trnd <- es(Xobs = ds$train %>% dplyr::select(-y),
+                        Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
+                        note = as.character(this_job$Dataset),
+                        paramList = parameters)
+          
+        } else if (es_name %in% c("rangerForest")) {
+          es <- loaded_model[[1]]$finalModel
+          parameters <- list("ntree" = es$num.trees,
+                             "sample.fraction" = es$tuneValue$sample.fraction,
+                             "min.node.size" = es$min.node.size,
+                             "mtry" = es$mtry)
+          
+          es <- estimator_grid[[as.character(this_job$Estimator)]]
+          
+          es_trnd <- es(Xobs = ds$train %>% dplyr::select(-y),
+                        Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
+                        note = as.character(this_job$Dataset),
+                        paramList = parameters)
         }
         
         # Clean up environment so it doesn't get messy
@@ -167,40 +193,39 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
     this_job$runtime <- summary(tm)$mean
     
     # save the job
-    #write.csv(x = this_job, 
-    #          file = filename, 
-    #          row.names = FALSE) 
+    write.csv(x = this_job,
+             file = filename,
+             row.names = FALSE)
     print(this_job)
     print(filename)
     
     # Update the EMSE table 
-    #update_tables()
-    
+    update_tables()
   }
   return(filename)
 }
 
 # Test the run_saved functionality for each estimator
-print(paste("RUNNING", all_jobs[1, 1], "----", all_jobs[1, 2]))
-batch_func(i = 1, force = TRUE, run_saved = TRUE)
-
-print(paste("RUNNING", all_jobs[45, 1], "----", all_jobs[45, 2]))
-batch_func(i = 45, force = TRUE, run_saved = TRUE)
-
-print(paste("RUNNING", all_jobs[80, 1], "----", all_jobs[80, 2]))
-batch_func(i = 80, force = TRUE, run_saved = TRUE)
-
-print(paste("RUNNING", all_jobs[211, 1], "----", all_jobs[211, 2]))
-batch_func(i = 211, force = TRUE, run_saved = TRUE)
-
-print(paste("RUNNING", all_jobs[217, 1], "----", all_jobs[217, 2]))
-batch_func(i = 217, force = TRUE, run_saved = TRUE)
-
-print(paste("RUNNING", all_jobs[176, 1], "----", all_jobs[176, 2]))
-batch_func(i = 176, force = TRUE, run_saved = TRUE)
-
-print(paste("RUNNING", all_jobs[109, 1], "----", all_jobs[109, 2]))
-batch_func(i = 109, force = TRUE, run_saved = TRUE)
+# print(paste("RUNNING", all_jobs[1, 1], "----", all_jobs[1, 2]))
+# batch_func(i = 1, force = TRUE, run_saved = TRUE)
+# 
+# print(paste("RUNNING", all_jobs[45, 1], "----", all_jobs[45, 2]))
+# batch_func(i = 45, force = TRUE, run_saved = TRUE)
+# 
+# print(paste("RUNNING", all_jobs[80, 1], "----", all_jobs[80, 2]))
+# batch_func(i = 80, force = TRUE, run_saved = TRUE)
+# 
+# print(paste("RUNNING", all_jobs[211, 1], "----", all_jobs[211, 2]))
+# batch_func(i = 211, force = TRUE, run_saved = TRUE)
+# 
+# print(paste("RUNNING", all_jobs[217, 1], "----", all_jobs[217, 2]))
+# batch_func(i = 217, force = TRUE, run_saved = TRUE)
+# 
+# print(paste("RUNNING", all_jobs[176, 1], "----", all_jobs[176, 2]))
+# batch_func(i = 176, force = TRUE, run_saved = TRUE)
+# 
+# print(paste("RUNNING", all_jobs[109, 1], "----", all_jobs[109, 2]))
+# batch_func(i = 109, force = TRUE, run_saved = TRUE)
 
 
 
