@@ -108,12 +108,12 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
       } else if (run_saved) {
         es_name <- es_names[[as.character(this_job$Estimator)]]
         loaded_model <- readRDS(paste0("replicationCode/tuningParam/",es_name,this_job$Dataset,".RDS"))
-        es <- loaded_model[[1]]$finalModel
         
         # If we have reloaded a forestry object, relink the C++ ptr will not work
         # as this is an old version of forestry, so we pull the hyperparameters
         # and pass them as a list to the model
         if (es_name %in% c("ForestryForest", "caretRidgeRF_nonstrict", "RidgeTree")) {
+          es <- loaded_model[[1]]$finalModel
           parameters <- list("mtry" = es@mtry,
                              "nodesizeStrictSpl" = es@nodesizeStrictSpl,
                              "ntree" = es@ntree, 
@@ -127,12 +127,20 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
                         Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
                         note = as.character(this_job$Dataset),
                         paramList = parameters)
-        } else {
+        } else if (es_name %in% c("cubist")) {
+          es <- loaded_model[[1]]$finalModel
+          parameters <- list("committees" = es$committees,
+                             "extrapolation" = es$control$extrapolation,
+                             "neighbors" = es$tuneValues$neighbors)
+          
+          es <- estimator_grid[[as.character(this_job$Estimator)]]
+          
           es_trnd <- es(Xobs = ds$train %>% dplyr::select(-y),
                         Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
-                        note = as.character(this_job$Dataset))
+                        note = as.character(this_job$Dataset),
+                        paramList = parameters)
         }
-                
+        
         # Clean up environment so it doesn't get messy
         rm(loaded_model)
       }

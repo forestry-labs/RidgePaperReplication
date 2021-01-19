@@ -641,101 +641,111 @@ estimator_grid[["cubist"]] <- function(Xobs,
                                        Yobs,
                                        tune_length = 200,
                                        cv_fold = 8,
-                                       note = NA) {
+                                       note = NA,
+                                       paramList = NA) {
   library(Cubist)
   library(caret)
   
   encoder <- onehot::onehot(Xobs)
-  
   Xobs <- predict(encoder, Xobs)
   
-  cubist_fit <- list(
-    type = "Regression",
-    library = "Cubist",
-    loop = NULL,
-    parameters = data.frame(
-      parameter = c(
-        "committees",
-        "extrapolation",
-        "neighbors"
+  if (is.na(paramList)) {
+    cubist_fit <- list(
+      type = "Regression",
+      library = "Cubist",
+      loop = NULL,
+      parameters = data.frame(
+        parameter = c(
+          "committees",
+          "extrapolation",
+          "neighbors"
+        ),
+        class = rep("numeric", 3),
+        label = c(
+          "committees",
+          "extrapolation",
+          "neighbors"
+        )
       ),
-      class = rep("numeric", 3),
-      label = c(
-        "committees",
-        "extrapolation",
-        "neighbors"
-      )
-    ),
-    grid = function(x, y, len = NULL, search = "random") {
-      ## Define ranges for the parameters and
-      ## generate random values for them
-      
-      paramGrid <-
-        data.frame(
-          committees = sample(1:100, size = len, replace = TRUE),
-          extrapolation = sample(90:100, size = len, replace = TRUE),
-          neighbors = sample(0:9, size = len, replace = TRUE))
-      return(paramGrid)
-    },
-    fit = function(x,
-                   y,
-                   wts,
-                   param,
-                   lev = NULL,
-                   last,
-                   weights,
-                   classProbs) {
-      print(param)
-      
-      c <- cubist(x = Xobs,
-                  y = Yobs,
-                  committees = param$committees,
-                  control = cubistControl(extrapolation = param$extrapolation))
-      c$tuneValues$neighbors <- param$neighbors
-      c
-    },
-    predict = function(modelFit,
-                       newdata,
-                       preProc = NULL,
-                       submodels = NULL) {
-      #browser()
-      predict(modelFit, newdata, neighbors = modelFit$tuneValues$neighbors)
-    },
-    prob = NULL
-  )
+      grid = function(x, y, len = NULL, search = "random") {
+        ## Define ranges for the parameters and
+        ## generate random values for them
+        
+        paramGrid <-
+          data.frame(
+            committees = sample(1:100, size = len, replace = TRUE),
+            extrapolation = sample(90:100, size = len, replace = TRUE),
+            neighbors = sample(0:9, size = len, replace = TRUE))
+        return(paramGrid)
+      },
+      fit = function(x,
+                     y,
+                     wts,
+                     param,
+                     lev = NULL,
+                     last,
+                     weights,
+                     classProbs) {
+        print(param)
+        
+        c <- cubist(x = Xobs,
+                    y = Yobs,
+                    committees = param$committees,
+                    control = cubistControl(extrapolation = param$extrapolation))
+        c$tuneValues$neighbors <- param$neighbors
+        c
+      },
+      predict = function(modelFit,
+                         newdata,
+                         preProc = NULL,
+                         submodels = NULL) {
+        #browser()
+        predict(modelFit, newdata, neighbors = modelFit$tuneValues$neighbors)
+      },
+      prob = NULL
+    )
+    
+    fitControl <- trainControl(
+      method = "adaptive_cv",
+      ## 5-fold CV
+      number = cv_fold,
+      ## repeated 5 times
+      repeats = 4,
+      adaptive = list(
+        min = 3,
+        alpha = 0.01,
+        method = "gls",
+        complete = FALSE
+      ), 
+      search = "random"
+    )
+    
+    tuned_cubist <- train(
+      y = Yobs, 
+      x = Xobs, 
+      method = cubist_fit,
+      metric = "RMSE",
+      tuneLength = tune_length,
+      trControl = fitControl
+    )
+    
+    # Save Tuning parameters ---------------------------------------------------
+    dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
+    saveRDS(
+      object = list(tuned_cubist),
+      file = paste0("replicationCode/tuningParam/cubist", note, ".RDS")
+    )
+    
+    return(list(model = tuned_cubist$finalModel, encoder = encoder))
   
-  fitControl <- trainControl(
-    method = "adaptive_cv",
-    ## 5-fold CV
-    number = cv_fold,
-    ## repeated 5 times
-    repeats = 4,
-    adaptive = list(
-      min = 3,
-      alpha = 0.01,
-      method = "gls",
-      complete = FALSE
-    ), 
-    search = "random"
-  )
-  
-  tuned_cubist <- train(
-    y = Yobs, 
-    x = Xobs, 
-    method = cubist_fit,
-    metric = "RMSE",
-    tuneLength = tune_length,
-    trControl = fitControl
-  )
-  
-  # Save Tuning parameters ---------------------------------------------------
-  dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
-  saveRDS(
-    object = list(tuned_cubist),
-    file = paste0("replicationCode/tuningParam/cubist", note, ".RDS")
-  )
-  
-  return(list(model = tuned_cubist$finalModel, encoder = encoder))
+  } else {
+    c_fit <- cubist(x = Xobs,
+                    y = Yobs,
+                    committees = paramList$committees,
+                    control = cubistControl(extrapolation = paramList$extrapolation))
+    c_fit$tuneValues$neighbors <- paramList$neighbors
+    return(list(model = c_fit, encoder = encoder))
+  }
 }
 
 # Tuning localRF ---------------------------------------------------------------
