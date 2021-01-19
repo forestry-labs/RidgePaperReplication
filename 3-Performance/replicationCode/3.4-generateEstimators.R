@@ -753,119 +753,137 @@ estimator_grid[["local_RF"]] <- function(Xobs,
                                          Yobs,
                                          tune_length = 200,
                                          cv_fold = 8,
-                                         note = NA) {
+                                         note = NA,
+                                         paramList = NA) {
   library(grf)
   library(caret)
   library(onehot)
   encoder <- onehot(Xobs)
   Xobs <- predict(encoder, Xobs)
-  
   minYobs <- min(Yobs)
   
-  # llf <- local_linear_forest(
-  #   X = predict(encoder, Xobs),
-  #   Y = Yobs,
-  #   num.trees = 500,
-  #   num.threads = 1
-  # )
-  # return(list(encoder, llf))
-  local_RF <- list(
-    type = "Regression",
-    library = "grf",
-    loop = NULL,
-    parameters = data.frame(
-      parameter = c(
-        "mtry",
-        "min.node.size",
-        "num.trees", 
-        "sample.fraction"
+  if (is.na(paramList)) {
+    # llf <- local_linear_forest(
+    #   X = predict(encoder, Xobs),
+    #   Y = Yobs,
+    #   num.trees = 500,
+    #   num.threads = 1
+    # )
+    # return(list(encoder, llf))
+    local_RF <- list(
+      type = "Regression",
+      library = "grf",
+      loop = NULL,
+      parameters = data.frame(
+        parameter = c(
+          "mtry",
+          "min.node.size",
+          "num.trees", 
+          "sample.fraction"
+        ),
+        class = rep("numeric", 4),
+        label = c(
+          "mtry",
+          "min.node.size	",
+          "num.trees",
+          "sample.fraction"
+        )
       ),
-      class = rep("numeric", 4),
-      label = c(
-        "mtry",
-        "min.node.size	",
-        "num.trees",
-        "sample.fraction"
-      )
-    ),
-    grid = function(x, y, len = NULL, search = "random") {
-      ## Define ranges for the parameters and
-      ## generate random values for them
-      
-      paramGrid <-
-        data.frame(
-          mtry = sample(1:ncol(x), size = len, replace = TRUE),
-          min.node.size	 = create_random_node_sizes(nobs = nrow(x),
-                                                    len = len),
-          num.trees = 500,
-          sample.fraction = runif(len, 0.5, 1))
-      print(paramGrid)
-      return(paramGrid)
-    },
-    fit = function(x,
-                   y,
-                   wts,
-                   param,
-                   lev = NULL,
-                   last,
-                   weights,
-                   classProbs) {
-      print(param)
-      mod <- NULL
-      tryCatch({
-        mod <- local_linear_forest(
-          X = x,
-          Y = y,
-          num.trees = param$num.trees,
-          sample.fraction = param$sample.fraction,
-          num.threads = 1,
-          min.node.size	 = param$min.node.size	,
-          mtry = param$mtry)
-      })
-      return(mod)
-    },
-    predict = function(modelFit,
-                       newdata,
-                       preProc = NULL,
-                       submodels = NULL) {
-      predict(modelFit, newdata)$predictions
-      
-    },
-    prob = NULL
-  )
-  
-  
-  fitControl <- trainControl(
-    method = "adaptive_cv",
-    ## 8-fold CV
-    number = cv_fold,
-    ## repeated 5 times
-    repeats = 4,
-    adaptive = list(
-      min = 3,
-      alpha = 0.01,
-      method = "gls",
-      complete = FALSE
+      grid = function(x, y, len = NULL, search = "random") {
+        ## Define ranges for the parameters and
+        ## generate random values for them
+        
+        paramGrid <-
+          data.frame(
+            mtry = sample(1:ncol(x), size = len, replace = TRUE),
+            min.node.size	 = create_random_node_sizes(nobs = nrow(x),
+                                                      len = len),
+            num.trees = 500,
+            sample.fraction = runif(len, 0.5, 1))
+        print(paramGrid)
+        return(paramGrid)
+      },
+      fit = function(x,
+                     y,
+                     wts,
+                     param,
+                     lev = NULL,
+                     last,
+                     weights,
+                     classProbs) {
+        print(param)
+        mod <- NULL
+        tryCatch({
+          mod <- ll_regression_forest(
+            X = x,
+            Y = y,
+            enable.ll.split = TRUE,
+            num.trees = param$num.trees,
+            sample.fraction = param$sample.fraction,
+            num.threads = 1,
+            min.node.size	 = param$min.node.size	,
+            mtry = param$mtry)
+        })
+        return(mod)
+      },
+      predict = function(modelFit,
+                         newdata,
+                         preProc = NULL,
+                         submodels = NULL) {
+        predict(modelFit, newdata)$predictions
+        
+      },
+      prob = NULL
     )
-  )
+    
+    
+    fitControl <- trainControl(
+      method = "adaptive_cv",
+      ## 8-fold CV
+      number = cv_fold,
+      ## repeated 5 times
+      repeats = 4,
+      adaptive = list(
+        min = 3,
+        alpha = 0.01,
+        method = "gls",
+        complete = FALSE
+      )
+    )
+    
+    local_rf <- train(
+      y = Yobs, 
+      x = Xobs, 
+      method = local_RF,
+      metric = "RMSE",
+      tuneLength = tune_length,
+      trControl = fitControl
+    )
+    
+    # Save Tuning parameters ---------------------------------------------------
+    dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
+    saveRDS(
+      object = list(local_rf),
+      file = paste0("replicationCode/tuningParam/local_rf", note, ".RDS")
+    )
+    
+    return(list("random_rf" = local_rf$finalModel, encoder))
+  } else {
+    
+    mod <- ll_regression_forest(
+      X = Xobs,
+      Y = Yobs,
+      enable.ll.split = TRUE,
+      num.trees = paramList$num.trees,
+      sample.fraction = paramList$sample.fraction,
+      num.threads = 1,
+      ci.group.size = 1,
+      min.node.size	 = paramList$min.node.size	,
+      mtry = paramList$mtry)
+    
+    return(list("random_rf" = mod, encoder))
+  }
   
-  local_rf <- train(
-    y = Yobs, 
-    x = Xobs, 
-    method = local_RF,
-    metric = "RMSE",
-    tuneLength = tune_length,
-    trControl = fitControl
-  )
-  
-  # Save Tuning parameters ---------------------------------------------------
-  dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
-  saveRDS(
-    object = list(local_rf),
-    file = paste0("replicationCode/tuningParam/local_rf", note, ".RDS")
-  )
-  
-  return(list("random_rf" = local_rf$finalModel, encoder))
 }
 
 

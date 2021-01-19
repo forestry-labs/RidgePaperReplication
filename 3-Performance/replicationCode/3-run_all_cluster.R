@@ -139,6 +139,20 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
                         Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
                         note = as.character(this_job$Dataset),
                         paramList = parameters)
+          
+        } else if (es_name %in% c("local_rf")) {
+          es <- loaded_model[[1]]$finalModel
+          parameters <- list("num.trees" = es$num.trees,
+                             "sample.fraction" = unname(es$tunable.params["sample.fraction"]),
+                             "min.node.size" = es$min.node.size,
+                             "mtry" = unname(es$tunable.params["mtry"]))
+          
+          es <- estimator_grid[[as.character(this_job$Estimator)]]
+          
+          es_trnd <- es(Xobs = ds$train %>% dplyr::select(-y),
+                        Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
+                        note = as.character(this_job$Dataset),
+                        paramList = parameters)
         }
         
         # Clean up environment so it doesn't get messy
