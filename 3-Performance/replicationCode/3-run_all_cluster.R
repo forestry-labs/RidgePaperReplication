@@ -70,7 +70,7 @@ update_tables <- function(){
 }
 
 # run the jobs -----------------------------------------------------------------
-batch_func <- function(i, force = FALSE){
+batch_func <- function(i, force = FALSE, run_saved = FALSE){
   library(dplyr)
   set.seed(6264175)
   (this_job <- all_jobs[i, ])
@@ -79,17 +79,39 @@ batch_func <- function(i, force = FALSE){
                      this_job$Dataset, "_", 
                      this_job$Estimator,".csv"))
   
+  es_names <- list("forestryRF" = "ForestryForest",
+                   "glmnet" = "glmnet",
+                   "cubist" = "cubist",
+                   "caretRidgeRF_nonstrict" = "caretRidgeRF_nonstrict",
+                   "local_RF" = "local_rf",
+                   "ranger" = "rangerForest",
+                   "caretRidgeTree" = "RidgeTree")
+  
   if ((!substr(filename, 27, 1000) %in% dir("replicationCode/3-results")) | 
       force) {
     
     ds <- datasets_grid[[as.character(this_job$Dataset)]]
-    es <- estimator_grid[[as.character(this_job$Estimator)]]
     pd <- predictor_grid[[as.character(this_job$Estimator)]]
     # run the current job this will save the results in 3-results/
     tm <- microbenchmark::microbenchmark({
-      es_trnd <- es(Xobs = ds$train %>% dplyr::select(-y),
-                    Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
-                    note = as.character(this_job$Dataset))
+      # If we don't want to run with saved hyperparameters
+      if (!run_saved) {
+        es <- estimator_grid[[as.character(this_job$Estimator)]]
+        es_trnd <- es(Xobs = ds$train %>% dplyr::select(-y),
+                      Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
+                      note = as.character(this_job$Dataset))
+      # Else check that the hyperparameters exist
+      } else if (run_saved) {
+        es_name <- es_names[[this_job$Estimator]]
+        loaded_model <- readRDS(paste0("replicationCode/tuningParam/",es_name,this_job$Dataset,".RDS"))
+        es <- loaded_model[[1]]$finalModel
+        es_trnd <- es(Xobs = ds$train %>% dplyr::select(-y),
+                      Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
+                      note = as.character(this_job$Dataset))
+        # Clean up environment so it doesn't get messy
+        rm(loaded_model)
+      }
+
       pdctns <- pd(estimator = es_trnd,
                    feat = ds$test %>% dplyr::select(-y))
       EMSE <- mean((pdctns - ds$test %>% dplyr::select(y) %>% .[,1])^2)
@@ -120,7 +142,8 @@ print("running things in parallel")
 
 foreach(i = c(1:nrow(all_jobs))) %dopar% {
   print(paste("RUNNING", all_jobs[i, 1], "----", all_jobs[i, 2]))
-  batch_func(i = i, force = FALSE)
+  # In order to 
+  batch_func(i = i, force = FALSE, run_saved = TRUE)
   print(paste("Done with", all_jobs[i,1], "----", all_jobs[i,2]))
 }
 
