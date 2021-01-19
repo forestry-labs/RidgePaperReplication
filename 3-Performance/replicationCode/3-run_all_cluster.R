@@ -86,6 +86,10 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
                    "local_RF" = "local_rf",
                    "ranger" = "rangerForest",
                    "caretRidgeTree" = "RidgeTree")
+  if (run_saved && this_job$Estimator == "BART") {
+    #BART ran without hyperparameter tuning
+    run_saved = FALSE
+  }
   
   if ((!substr(filename, 27, 1000) %in% dir("replicationCode/3-results")) | 
       force) {
@@ -102,12 +106,33 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
                       note = as.character(this_job$Dataset))
       # Else check that the hyperparameters exist
       } else if (run_saved) {
-        es_name <- es_names[[this_job$Estimator]]
+        es_name <- es_names[[as.character(this_job$Estimator)]]
         loaded_model <- readRDS(paste0("replicationCode/tuningParam/",es_name,this_job$Dataset,".RDS"))
         es <- loaded_model[[1]]$finalModel
-        es_trnd <- es(Xobs = ds$train %>% dplyr::select(-y),
-                      Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
-                      note = as.character(this_job$Dataset))
+        
+        # If we have reloaded a forestry object, relink the C++ ptr will not work
+        # as this is an old version of forestry, so we pull the hyperparameters
+        # and pass them as a list to the model
+        if (es_name %in% c("ForestryForest", "caretRidgeRF_nonstrict", "RidgeTree")) {
+          parameters <- list("mtry" = es@mtry,
+                             "nodesizeStrictSpl" = es@nodesizeStrictSpl,
+                             "ntree" = es@ntree, 
+                             "sample.fraction" = round(es@sampsize/es@processed_dta$nObservations),
+                             "minSplitGain" = es@minSplitGain,
+                             "overfitPenalty" = es@overfitPenalty)
+          
+          es <- estimator_grid[[as.character(this_job$Estimator)]]
+          
+          es_trnd <- es(Xobs = ds$train %>% dplyr::select(-y),
+                        Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
+                        note = as.character(this_job$Dataset),
+                        paramList = parameters)
+        } else {
+          es_trnd <- es(Xobs = ds$train %>% dplyr::select(-y),
+                        Yobs = ds$train %>% dplyr::select(y) %>% .[,1], 
+                        note = as.character(this_job$Dataset))
+        }
+                
         # Clean up environment so it doesn't get messy
         rm(loaded_model)
       }
@@ -120,16 +145,42 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
     this_job$runtime <- summary(tm)$mean
     
     # save the job
-    write.csv(x = this_job, 
-              file = filename, 
-              row.names = FALSE) 
+    #write.csv(x = this_job, 
+    #          file = filename, 
+    #          row.names = FALSE) 
+    print(this_job)
+    print(filename)
     
     # Update the EMSE table 
-    update_tables()
+    #update_tables()
     
   }
   return(filename)
 }
+
+# Test the run_saved functionality for each estimator
+print(paste("RUNNING", all_jobs[1, 1], "----", all_jobs[1, 2]))
+batch_func(i = 1, force = TRUE, run_saved = TRUE)
+
+print(paste("RUNNING", all_jobs[45, 1], "----", all_jobs[45, 2]))
+batch_func(i = 45, force = TRUE, run_saved = TRUE)
+
+print(paste("RUNNING", all_jobs[80, 1], "----", all_jobs[80, 2]))
+batch_func(i = 80, force = TRUE, run_saved = TRUE)
+
+print(paste("RUNNING", all_jobs[211, 1], "----", all_jobs[211, 2]))
+batch_func(i = 211, force = TRUE, run_saved = TRUE)
+
+print(paste("RUNNING", all_jobs[217, 1], "----", all_jobs[217, 2]))
+batch_func(i = 217, force = TRUE, run_saved = TRUE)
+
+print(paste("RUNNING", all_jobs[176, 1], "----", all_jobs[176, 2]))
+batch_func(i = 176, force = TRUE, run_saved = TRUE)
+
+print(paste("RUNNING", all_jobs[109, 1], "----", all_jobs[109, 2]))
+batch_func(i = 109, force = TRUE, run_saved = TRUE)
+
+
 
 # Set tables before running simulations
 update_tables()
@@ -140,10 +191,17 @@ registerDoParallel(cl)
 
 print("running things in parallel")
 
+# The following code will run all the simulations from Section 3
+# in order to only run a subset, one can call the batch_func
+# with the desired job_id's only
+
 foreach(i = c(1:nrow(all_jobs))) %dopar% {
   print(paste("RUNNING", all_jobs[i, 1], "----", all_jobs[i, 2]))
-  # In order to 
-  batch_func(i = i, force = FALSE, run_saved = TRUE)
+  
+  # In order to run the simulations with hyperparameter tuning, change the
+  # run_saved flag to FALSE. This may take a very long time however
+  
+  batch_func(i = i, force = TRUE, run_saved = TRUE)
   print(paste("Done with", all_jobs[i,1], "----", all_jobs[i,2]))
 }
 

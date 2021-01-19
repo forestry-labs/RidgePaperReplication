@@ -23,131 +23,131 @@ create_random_node_sizes <- function(nobs, len) {
 estimator_grid <- list()
 
 
-# Special ridge RF estimator with the hyperparameters for stepLinear 2048-------
-# estimator_grid[["ridgeRFStepLinear"]] <- function(Xobs,
-#                                                   Yobs,
-#                                                   note = NA) {
-#   library(Rforestry)
-#   
-#   fit <- Rforestry::forestry(
-#                              x = Xobs,
-#                              y = Yobs,
-#                              mtry = 10,
-#                              nodesizeSpl = 12,
-#                              linear = TRUE,
-#                              overfitPenalty = 8.74,
-#                              minSplitGain = exp(-3),
-#                              sample.fraction = .92
-#                            )
-#   return(list("random_rf" = fit))
-# }
-
-
 #Tuning forestry RF ------------------------------------------------------------
 estimator_grid[["forestryRF"]] <- function(Xobs,
                                            Yobs,
                                            tune_length = 20,
                                            cv_fold = 8,
-                                           note = NA) {
+                                           note = NA,
+                                           paramList = NA) {
   library(Rforestry)
   library(caret)
   
-  forestryRF <- list(
-    type = "Regression",
-    library = "forestry",
-    loop = NULL,
-    parameters = data.frame(
-      parameter = c(
-        "mtry",
-        "nodesizeStrictSpl",
-        "ntree", 
-        "sample.fraction"
+  if (is.na(paramList)) {
+    
+    forestryRF <- list(
+      type = "Regression",
+      library = "forestry",
+      loop = NULL,
+      parameters = data.frame(
+        parameter = c(
+          "mtry",
+          "nodesizeStrictSpl",
+          "ntree", 
+          "sample.fraction"
+        ),
+        class = rep("numeric", 4),
+        label = c(
+          "mtry",
+          "nodesizeStrictSpl",
+          "ntree",
+          "sample.fraction"
+        )
       ),
-      class = rep("numeric", 4),
-      label = c(
-        "mtry",
-        "nodesizeStrictSpl",
-        "ntree",
-        "sample.fraction"
-      )
-    ),
-    grid = function(x, y, len = NULL, search = "random") {
-      ## Define ranges for the parameters and
-      ## generate random values for them
-      
-      paramGrid <-
-        data.frame(
-          mtry = sample(1:ncol(x), size = len, replace = TRUE),
-          nodesizeStrictSpl = create_random_node_sizes(nobs = nrow(x),
-                                                       len = len),
-          ntree = 500,
-          sample.fraction = runif(len, 0.5, 1))
-      return(paramGrid)
-    },
-    fit = function(x,
-                   y,
-                   wts,
-                   param,
-                   lev = NULL,
-                   last,
-                   weights,
-                   classProbs) {
-      print(param)
-      
-      forestry(
-        x = x,
-        y = y,
-        ntree = param$ntree,
-        sample.fraction = param$sample.fraction,
-        nodesizeSpl = 1,
-        nodesizeAvg = 1,
-        nodesizeStrictAvg = 1,
-        nthread = 1,
-        nodesizeStrictSpl = param$nodesizeStrictSpl,
-        mtry = param$mtry,
-        saveable = FALSE
-      )
-    },
-    predict = function(modelFit,
-                       newdata,
-                       preProc = NULL,
-                       submodels = NULL) {
-      predict(modelFit, newdata)
-    },
-    prob = NULL
-  )
-  
-  fitControl <- trainControl(
-    method = "adaptive_cv",
-    ## 8-fold CV
-    number = cv_fold,
-    ## repeated 5 times
-    repeats = 4,
-    adaptive = list(
-      min = 3,
-      alpha = 0.01,
-      method = "gls",
-      complete = FALSE
+      grid = function(x, y, len = NULL, search = "random") {
+        ## Define ranges for the parameters and
+        ## generate random values for them
+        
+        paramGrid <-
+          data.frame(
+            mtry = sample(1:ncol(x), size = len, replace = TRUE),
+            nodesizeStrictSpl = create_random_node_sizes(nobs = nrow(x),
+                                                         len = len),
+            ntree = 500,
+            sample.fraction = runif(len, 0.5, 1))
+        return(paramGrid)
+      },
+      fit = function(x,
+                     y,
+                     wts,
+                     param,
+                     lev = NULL,
+                     last,
+                     weights,
+                     classProbs) {
+        print(param)
+        
+        forestry(
+          x = x,
+          y = y,
+          ntree = param$ntree,
+          sample.fraction = param$sample.fraction,
+          nodesizeSpl = 1,
+          nodesizeAvg = 1,
+          nodesizeStrictAvg = 1,
+          nthread = 1,
+          nodesizeStrictSpl = param$nodesizeStrictSpl,
+          mtry = param$mtry,
+          saveable = FALSE
+        )
+      },
+      predict = function(modelFit,
+                         newdata,
+                         preProc = NULL,
+                         submodels = NULL) {
+        predict(modelFit, newdata)
+      },
+      prob = NULL
     )
-  )
+    
+    fitControl <- trainControl(
+      method = "adaptive_cv",
+      ## 8-fold CV
+      number = cv_fold,
+      ## repeated 5 times
+      repeats = 4,
+      adaptive = list(
+        min = 3,
+        alpha = 0.01,
+        method = "gls",
+        complete = FALSE
+      )
+    )
+    
+    random_rf <- train(
+      y = Yobs, 
+      x = Xobs, 
+      method = forestryRF,
+      metric = "RMSE",
+      tuneLength = tune_length,
+      trControl = fitControl
+    )
+    
+    # Save Tuning parameters ---------------------------------------------------
+    dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
+    saveRDS(
+      object = list(random_rf),
+      file = paste0("replicationCode/tuningParam/ForestryForest", note, ".RDS")
+    )
+    
+    return(list("random_rf" = random_rf$finalModel))
+    
+  } else {
+    fit <- forestry(x = Xobs,
+                    y = Yobs,
+                    ntree = paramList$ntree,
+                    sample.fraction = paramList$sample.fraction,
+                    nodesizeSpl = 1,
+                    nodesizeAvg = 1,
+                    nodesizeStrictAvg = 1,
+                    nthread = 1,
+                    nodesizeStrictSpl = paramList$nodesizeStrictSpl,
+                    mtry = paramList$mtry,
+                    saveable = FALSE)
+    
+    return(list("random_rf" = fit))
+  }
   
-  random_rf <- train(
-    y = Yobs, 
-    x = Xobs, 
-    method = forestryRF,
-    metric = "RMSE",
-    tuneLength = tune_length,
-    trControl = fitControl
-  )
-  
-  # Save Tuning parameters ---------------------------------------------------
-  dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
-  saveRDS(
-    object = list(random_rf),
-    file = paste0("replicationCode/tuningParam/ForestryForest", note, ".RDS")
-  )
-  
-  return(list("random_rf" = random_rf$finalModel))
 }
 
 # #Tuning Ridge RF --------------------------------------------------------------
@@ -155,121 +155,142 @@ estimator_grid[["caretRidgeRF_nonstrict"]] <- function(Xobs,
                                                        Yobs,
                                                        tune_length = 200,
                                                        cv_fold = 8,
-                                                       note = NA) {
+                                                       note = NA,
+                                                       paramList = NA) {
   library(Rforestry)
   library(caret)
-
-  ridgeRF <- list(
-    type = "Regression",
-    library = "forestry",
-    loop = NULL,
-    parameters = data.frame(
-      parameter = c(
-        "mtry",
-        "nodesizeStrictSpl",
-        "overfitPenalty",
-        "minSplitGain",
-        "ntree",
-        "sample.fraction"
+  
+  if (is.na(paramList)) {
+    ridgeRF <- list(
+      type = "Regression",
+      library = "forestry",
+      loop = NULL,
+      parameters = data.frame(
+        parameter = c(
+          "mtry",
+          "nodesizeStrictSpl",
+          "overfitPenalty",
+          "minSplitGain",
+          "ntree",
+          "sample.fraction"
+        ),
+        class = rep("numeric", 6),
+        label = c(
+          "mtry",
+          "nodesizeStrictSpl",
+          "overfitPenalty",
+          "minSplitGain",
+          "ntree",
+          "sample.fraction"
+        )
       ),
-      class = rep("numeric", 6),
-      label = c(
-        "mtry",
-        "nodesizeStrictSpl",
-        "overfitPenalty",
-        "minSplitGain",
-        "ntree",
-        "sample.fraction"
-      )
-    ),
-    grid = function(x, y, len = NULL, search = "random") {
-      ## Define ranges for the parameters and
-      ## generate random values for them
-
-      paramGrid <-
-        data.frame(
-          mtry = sample(1:ncol(x), size = len, replace = TRUE),
-          nodesizeStrictSpl = create_random_node_sizes(nobs = nrow(x),
-                                                       len = len),
-          # Might want to pass specific range/distribution for lambdas
-          overfitPenalty = exp(runif(
-            len,
-            min = log(.1),
-            max = log(10)
-          )),
-          minSplitGain = runif(len, 0, .5) ^
-            4,
-          ntree = 500,
-          sample.fraction = runif(len, 0.5, 1))
-      return(paramGrid)
-    },
-    fit = function(x,
-                   y,
-                   wts,
-                   param,
-                   lev = NULL,
-                   last,
-                   weights,
-                   classProbs) {
-      print(param)
-
-      forestry(
-        x = x,
-        y = y,
-        ridgeRF = TRUE,
-        ntree = param$ntree,
-        sample.fraction = param$sample.fraction,
-        nodesizeSpl = 1,
-        nodesizeAvg = 1,
-        nodesizeStrictAvg = 1,
-        nthread = 1,
-        nodesizeStrictSpl = param$nodesizeStrictSpl,
-        mtry = param$mtry,
-        overfitPenalty = param$overfitPenalty,
-        saveable = FALSE,
-        minSplitGain = param$minSplitGain
-      )
-    },
-    predict = function(modelFit,
-                       newdata,
-                       preProc = NULL,
-                       submodels = NULL) {
-      predict(modelFit, newdata)
-    },
-    prob = NULL
-  )
-
-  fitControl <- trainControl(
-    method = "adaptive_cv",
-    ## 8-fold CV
-    number = cv_fold,
-    ## repeated 5 times
-    repeats = 4,
-    adaptive = list(
-      min = 3,
-      alpha = 0.01,
-      method = "gls",
-      complete = FALSE
+      grid = function(x, y, len = NULL, search = "random") {
+        ## Define ranges for the parameters and
+        ## generate random values for them
+        
+        paramGrid <-
+          data.frame(
+            mtry = sample(1:ncol(x), size = len, replace = TRUE),
+            nodesizeStrictSpl = create_random_node_sizes(nobs = nrow(x),
+                                                         len = len),
+            # Might want to pass specific range/distribution for lambdas
+            overfitPenalty = exp(runif(
+              len,
+              min = log(.1),
+              max = log(10)
+            )),
+            minSplitGain = runif(len, 0, .5) ^
+              4,
+            ntree = 500,
+            sample.fraction = runif(len, 0.5, 1))
+        return(paramGrid)
+      },
+      fit = function(x,
+                     y,
+                     wts,
+                     param,
+                     lev = NULL,
+                     last,
+                     weights,
+                     classProbs) {
+        print(param)
+        
+        forestry(
+          x = x,
+          y = y,
+          linear = TRUE,
+          ntree = param$ntree,
+          sample.fraction = param$sample.fraction,
+          nodesizeSpl = 1,
+          nodesizeAvg = 1,
+          nodesizeStrictAvg = 1,
+          nthread = 1,
+          nodesizeStrictSpl = param$nodesizeStrictSpl,
+          mtry = param$mtry,
+          overfitPenalty = param$overfitPenalty,
+          saveable = FALSE,
+          minSplitGain = param$minSplitGain
+        )
+      },
+      predict = function(modelFit,
+                         newdata,
+                         preProc = NULL,
+                         submodels = NULL) {
+        predict(modelFit, newdata)
+      },
+      prob = NULL
     )
-  )
-
-  random_rf <- train(
-    y = Yobs,
-    x = Xobs,
-    method = ridgeRF,
-    metric = "RMSE",
-    tuneLength = tune_length,
-    trControl = fitControl
-  )
-
-  # Save Tuning parameters ---------------------------------------------------
-  dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
-  saveRDS(
-    object = list(random_rf),
-    file = paste0("replicationCode/tuningParam/RidgeForest", note, ".RDS")
-  )
-
-  return(list("random_rf" = random_rf$finalModel))
+    
+    fitControl <- trainControl(
+      method = "adaptive_cv",
+      ## 8-fold CV
+      number = cv_fold,
+      ## repeated 5 times
+      repeats = 4,
+      adaptive = list(
+        min = 3,
+        alpha = 0.01,
+        method = "gls",
+        complete = FALSE
+      )
+    )
+    
+    random_rf <- train(
+      y = Yobs,
+      x = Xobs,
+      method = ridgeRF,
+      metric = "RMSE",
+      tuneLength = tune_length,
+      trControl = fitControl
+    )
+    
+    # Save Tuning parameters ---------------------------------------------------
+    dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
+    saveRDS(
+      object = list(random_rf),
+      file = paste0("replicationCode/tuningParam/RidgeForest", note, ".RDS")
+    )
+    
+    return(list("random_rf" = random_rf$finalModel))
+  } else {
+    fit <- forestry(x = Xobs,
+                    y = Yobs,
+                    linear = TRUE,
+                    ntree = paramList$ntree,
+                    sample.fraction = paramList$sample.fraction,
+                    nodesizeSpl = 1,
+                    nodesizeAvg = 1,
+                    nodesizeStrictAvg = 1,
+                    nthread = 1,
+                    nodesizeStrictSpl = paramList$nodesizeStrictSpl,
+                    mtry = paramList$mtry,
+                    overfitPenalty = paramList$overfitPenalty,
+                    saveable = FALSE,
+                    minSplitGain = paramList$minSplitGain)
+    
+    return(list("random_rf" = fit))
+  }
+  
 }
 
 # Tune Ridge Tree --------------------------------------------------------------
@@ -277,121 +298,142 @@ estimator_grid[["caretRidgeTree"]] <- function(Xobs,
                                                Yobs,
                                                tune_length = 200,
                                                cv_fold = 8,
-                                               note = NA) {
+                                               note = NA,
+                                               paramList = NA) {
   library(Rforestry)
   library(caret)
   
-  ridgeRF <- list(
-    type = "Regression",
-    library = "forestry",
-    loop = NULL,
-    parameters = data.frame(
-      parameter = c(
-        "mtry",
-        "nodesizeStrictSpl",
-        "overfitPenalty",
-        "minSplitGain",
-        "ntree"
-      ),
-      class = rep("numeric", 5),
-      label = c(
-        "mtry",
-        "nodesizeStrictSpl",
-        "overfitPenalty",
-        "minSplitGain",
-        "ntree"
-      )
-    ),
-    grid = function(x, y, len = NULL, search = "random") {
-      ## Define ranges for the parameters and
-      ## generate random values for them
-      
-      paramGrid <-
-        data.frame(
-          mtry = sample(1:ncol(x), size = len, replace = TRUE),
-          nodesizeStrictSpl = create_random_node_sizes(nobs = nrow(x),
-                                                       len = len),
-          # Might want to pass specific range/distribution for lambdas
-          overfitPenalty = exp(runif(
-            len,
-            min = log(.1),
-            max = log(10)
-          )),
-          minSplitGain = runif(len, 0, .5) ^
-            4,
-          ntree = 1
+  if (is.na(paramList)) {
+    ridgeRF <- list(
+      type = "Regression",
+      library = "forestry",
+      loop = NULL,
+      parameters = data.frame(
+        parameter = c(
+          "mtry",
+          "nodesizeStrictSpl",
+          "overfitPenalty",
+          "minSplitGain",
+          "ntree"
+        ),
+        class = rep("numeric", 5),
+        label = c(
+          "mtry",
+          "nodesizeStrictSpl",
+          "overfitPenalty",
+          "minSplitGain",
+          "ntree"
         )
-      return(paramGrid)
-    },
-    fit = function(x,
-                   y,
-                   wts,
-                   param,
-                   lev = NULL,
-                   last,
-                   weights,
-                   classProbs) {
-      print(param)
-      
-      forestry(
-        x = x,
-        y = y,
-        replace = TRUE,
-        sample.fraction = 1,
-        ridgeRF = TRUE,
-        ntree = param$ntree,
-        nodesizeSpl = 1,
-        nodesizeAvg = 1,
-        nodesizeStrictAvg = 1,
-        nthread = 1,
-        nodesizeStrictSpl = param$nodesizeStrictSpl,
-        mtry = param$mtry,
-        overfitPenalty = param$overfitPenalty,
-        saveable = FALSE,
-        minSplitGain = param$minSplitGain
-      )
-    },
-    predict = function(modelFit,
-                       newdata,
-                       preProc = NULL,
-                       submodels = NULL) {
-      predict(modelFit, newdata)
-    },
-    prob = NULL
-  )
-  
-  fitControl <- trainControl(
-    method = "adaptive_cv",
-    ## 8-fold CV
-    number = cv_fold,
-    ## repeated 5 times
-    repeats = 4,
-    adaptive = list(
-      min = 3,
-      alpha = 0.01,
-      method = "gls",
-      complete = FALSE
+      ),
+      grid = function(x, y, len = NULL, search = "random") {
+        ## Define ranges for the parameters and
+        ## generate random values for them
+        
+        paramGrid <-
+          data.frame(
+            mtry = sample(1:ncol(x), size = len, replace = TRUE),
+            nodesizeStrictSpl = create_random_node_sizes(nobs = nrow(x),
+                                                         len = len),
+            # Might want to pass specific range/distribution for lambdas
+            overfitPenalty = exp(runif(
+              len,
+              min = log(.1),
+              max = log(10)
+            )),
+            minSplitGain = runif(len, 0, .5) ^
+              4,
+            ntree = 1
+          )
+        return(paramGrid)
+      },
+      fit = function(x,
+                     y,
+                     wts,
+                     param,
+                     lev = NULL,
+                     last,
+                     weights,
+                     classProbs) {
+        print(param)
+        
+        forestry(
+          x = x,
+          y = y,
+          replace = TRUE,
+          sample.fraction = 1,
+          linear = TRUE,
+          ntree = param$ntree,
+          nodesizeSpl = 1,
+          nodesizeAvg = 1,
+          nodesizeStrictAvg = 1,
+          nthread = 1,
+          nodesizeStrictSpl = param$nodesizeStrictSpl,
+          mtry = param$mtry,
+          overfitPenalty = param$overfitPenalty,
+          saveable = FALSE,
+          minSplitGain = param$minSplitGain
+        )
+      },
+      predict = function(modelFit,
+                         newdata,
+                         preProc = NULL,
+                         submodels = NULL) {
+        predict(modelFit, newdata)
+      },
+      prob = NULL
     )
-  )
-  
-  random_rf <- train(
-    y = Yobs, 
-    x = Xobs, 
-    method = ridgeRF,
-    metric = "RMSE",
-    tuneLength = tune_length,
-    trControl = fitControl
-  )
-  
-  # Save Tuning parameters ---------------------------------------------------
-  dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
-  saveRDS(
-    object = list(random_rf),
-    file = paste0("replicationCode/tuningParam/RidgeTree", note, ".RDS")
-  )
-  
-  
-  return(list("random_rf" = random_rf$finalModel))
+    
+    fitControl <- trainControl(
+      method = "adaptive_cv",
+      ## 8-fold CV
+      number = cv_fold,
+      ## repeated 5 times
+      repeats = 4,
+      adaptive = list(
+        min = 3,
+        alpha = 0.01,
+        method = "gls",
+        complete = FALSE
+      )
+    )
+    
+    random_rf <- train(
+      y = Yobs, 
+      x = Xobs, 
+      method = ridgeRF,
+      metric = "RMSE",
+      tuneLength = tune_length,
+      trControl = fitControl
+    )
+    
+    # Save Tuning parameters ---------------------------------------------------
+    dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
+    saveRDS(
+      object = list(random_rf),
+      file = paste0("replicationCode/tuningParam/RidgeTree", note, ".RDS")
+    )
+    
+    
+    return(list("random_rf" = random_rf$finalModel))
+  } else {
+    fit <- forestry(x = Xobs,
+                    y = Yobs,
+                    replace = TRUE,
+                    sample.fraction = 1,
+                    linear = TRUE,
+                    ntree = paramList$ntree,
+                    nodesizeSpl = 1,
+                    nodesizeAvg = 1,
+                    nodesizeStrictAvg = 1,
+                    nthread = 1,
+                    nodesizeStrictSpl = paramList$nodesizeStrictSpl,
+                    mtry = paramList$mtry,
+                    overfitPenalty = paramList$overfitPenalty,
+                    saveable = FALSE,
+                    minSplitGain = paramList$minSplitGain)
+    
+    return(list("random_rf" = fit))
+  }
 }
 
 # Tune ranger --------------------------------------------------------------
@@ -935,6 +977,10 @@ predictor_grid <- list(
   },
   
   "caretRidgeRF" = function(estimator, feat) {
+    return(predict(estimator, feat)$random_rf)
+  },
+  
+  "caretRidgeRF_nonstrict" = function(estimator, feat) {
     return(predict(estimator, feat)$random_rf)
   },
   
