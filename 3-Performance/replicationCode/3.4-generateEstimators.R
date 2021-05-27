@@ -768,7 +768,7 @@ estimator_grid[["gbm"]] <- function(Xobs,
     # Save Tuning parameters ---------------------------------------------------
     dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
     saveRDS(
-      object = list(tuned_cubist),
+      object = list(tuned_gbm),
       file = paste0("replicationCode/tuningParam/gbm", note, ".RDS")
     )
 
@@ -787,6 +787,127 @@ estimator_grid[["gbm"]] <- function(Xobs,
     return(list(model = e_fit))
   }
 }
+
+# Tuning RuleFit -------------------------------------------------------------------
+estimator_grid[["pre"]] <- function(Xobs,
+                                    Yobs,
+                                    tune_length = 200,
+                                    cv_fold = 8,
+                                    note = NA,
+                                    paramList = NA) {
+  library(caret)
+  library(pre)
+
+
+  if (is.na(paramList[[1]])) {
+    rule_fit <- list(
+      type = "Regression",
+      library = "pre",
+      loop = NULL,
+      parameters = data.frame(
+        parameter = c(
+          "ntrees",
+          "maxdepth",
+          "learnrate",
+          "mtry"
+        ),
+        class = rep("numeric", 4),
+        label = c(
+          "ntrees",
+          "maxdepth",
+          "learnrate",
+          "mtry"
+        )
+      ),
+      grid = function(x, y, len = NULL, search = "random") {
+        ## Define ranges for the parameters and
+        ## generate random values for them
+
+        paramGrid <-
+          data.frame(
+            ntrees = sample(400:600, size = len, replace = TRUE),
+            maxdepth = sample(2:6, size = len, replace = TRUE),
+            learnrate = runif(len, 0.01, .1),
+            mtry = sample(1:ncol(x), size = len, replace = TRUE))
+        return(paramGrid)
+      },
+      fit = function(x,
+                     y,
+                     wts,
+                     param,
+                     lev = NULL,
+                     last,
+                     weights,
+                     classProbs) {
+        print(param)
+
+        e <- pre(y ~ .,
+                 data = data.frame(x, y),
+                 distribution = "gaussian",
+                 ntrees = param$ntrees,
+                 maxdepth = param$maxdepth,
+                 learnrate = param$learnrate,
+                 mtry = param$mtry
+        )
+        e
+      },
+      predict = function(modelFit,
+                         newdata,
+                         preProc = NULL,
+                         submodels = NULL) {
+        #browser()
+        predict(modelFit, newdata)
+      },
+      prob = NULL
+    )
+
+    fitControl <- trainControl(
+      method = "adaptive_cv",
+      ## 5-fold CV
+      number = cv_fold,
+      ## repeated 5 times
+      repeats = 4,
+      adaptive = list(
+        min = 3,
+        alpha = 0.01,
+        method = "gls",
+        complete = FALSE
+      ),
+      search = "random"
+    )
+
+    tuned_rule_fit <- train(
+      y = Yobs,
+      x = Xobs,
+      method = rule_fit,
+      metric = "RMSE",
+      tuneLength = tune_length,
+      trControl = fitControl
+    )
+
+    # Save Tuning parameters ---------------------------------------------------
+    dir.create("replicationCode/tuningParam/", showWarnings = FALSE)
+    saveRDS(
+      object = list(tuned_rule_fit),
+      file = paste0("replicationCode/tuningParam/pre", note, ".RDS")
+    )
+
+    return(list(model = tuned_rule_fit$finalModel))
+
+  } else {
+    # If we have saved hyperparameters, use those instead
+    e_fit <- pre(y ~ .,
+                 data = data.frame(x, y),
+                 distribution = "gaussian",
+                 ntrees = paramList$ntrees,
+                 maxdepth = paramList$maxdepth,
+                 learnrate = paramList$learnrate,
+                 mtry = paramList$mtry)
+
+    return(list(model = e_fit))
+  }
+}
+
 
 # Tuning cubist ----------------------------------------------------------------
 estimator_grid[["cubist"]] <- function(Xobs,
@@ -1196,6 +1317,11 @@ predictor_grid <- list(
   },
 
   "gbm" = function(estimator, feat) {
+    return(predict(estimator[[1]],
+                   newdata = feat)
+  },
+
+  "pre" = function(estimator, feat) {
     return(predict(estimator[[1]],
                    newdata = feat)
   },
