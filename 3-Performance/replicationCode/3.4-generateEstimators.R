@@ -671,7 +671,7 @@ estimator_grid[["glmnet"]] <- function(Xobs,
 # Tuning gbm -------------------------------------------------------------------
 estimator_grid[["gbm"]] <- function(Xobs,
                                     Yobs,
-                                    tune_length = 200,
+                                    tune_length = 2,
                                     cv_fold = 8,
                                     note = NA,
                                     paramList = NA) {
@@ -791,7 +791,7 @@ estimator_grid[["gbm"]] <- function(Xobs,
 # Tuning RuleFit -------------------------------------------------------------------
 estimator_grid[["pre"]] <- function(Xobs,
                                     Yobs,
-                                    tune_length = 200,
+                                    tune_length = 2,
                                     cv_fold = 8,
                                     note = NA,
                                     paramList = NA) {
@@ -896,8 +896,8 @@ estimator_grid[["pre"]] <- function(Xobs,
 
   } else {
     # If we have saved hyperparameters, use those instead
-    e_fit <- pre(y ~ .,
-                 data = data.frame(x, y),
+    e_fit <- pre(Yobs ~ .,
+                 data = data.frame(Xobs, Yobs),
                  distribution = "gaussian",
                  ntrees = paramList$ntrees,
                  maxdepth = paramList$maxdepth,
@@ -1318,12 +1318,12 @@ predictor_grid <- list(
 
   "gbm" = function(estimator, feat) {
     return(predict(estimator[[1]],
-                   newdata = feat)
+                   newdata = feat))
   },
 
   "pre" = function(estimator, feat) {
     return(predict(estimator[[1]],
-                   newdata = feat)
+                   newdata = feat))
   },
 
   "BART" = function(estimator, feat) {
