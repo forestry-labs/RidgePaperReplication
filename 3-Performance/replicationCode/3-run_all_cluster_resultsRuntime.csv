@@ -9,7 +9,7 @@
 "8","simulated-Step-Function-512",NA,NA
 "9","simulated-Step-Function-1024",NA,NA
 "10","simulated-Step-Function-2048",NA,NA
-"11","simulated-StepLinear-Function-128",NA,2.827574749
+"11","simulated-StepLinear-Function-128",0.056239752,2.827574749
 "12","simulated-StepLinear-Function-256",NA,NA
 "13","simulated-StepLinear-Function-512",NA,NA
 "14","simulated-StepLinear-Function-1024",NA,NA

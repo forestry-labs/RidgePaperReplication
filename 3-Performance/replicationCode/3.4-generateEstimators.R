@@ -671,7 +671,7 @@ estimator_grid[["glmnet"]] <- function(Xobs,
 # Tuning gbm -------------------------------------------------------------------
 estimator_grid[["gbm"]] <- function(Xobs,
                                     Yobs,
-                                    tune_length = 2,
+                                    tune_length = 50,
                                     cv_fold = 8,
                                     note = NA,
                                     paramList = NA) {
@@ -705,10 +705,11 @@ estimator_grid[["gbm"]] <- function(Xobs,
 
         paramGrid <-
           data.frame(
-            n.trees = sample(1:100, size = len, replace = TRUE),
-            interaction.depth = sample(90:100, size = len, replace = TRUE),
-            shrinkage = sample(0:9, size = len, replace = TRUE),
-            n.minobsinnode = sample(5:10, size = len, replace = TRUE))
+            n.trees = sample(50:120, size = len, replace = TRUE),
+            interaction.depth = sample(1:3, size = len, replace = TRUE),
+            shrinkage = runif(len, 0.01, .1),
+            n.minobsinnode = create_random_node_sizes(nobs = nrow(x),
+                                                      len = len))
         return(paramGrid)
       },
       fit = function(x,
@@ -776,8 +777,8 @@ estimator_grid[["gbm"]] <- function(Xobs,
 
   } else {
     # If we have saved hyperparameters, use those instead
-    e_fit <- gbm(y ~ .,
-                 data = data.frame(x, y),
+    e_fit <- gbm(Yobs ~ .,
+                 data = data.frame(Xobs, Yobs),
                  distribution = "gaussian",
                  n.trees = paramList$n.trees,
                  interaction.depth = paramList$interaction.depth,
@@ -791,7 +792,7 @@ estimator_grid[["gbm"]] <- function(Xobs,
 # Tuning RuleFit -------------------------------------------------------------------
 estimator_grid[["pre"]] <- function(Xobs,
                                     Yobs,
-                                    tune_length = 2,
+                                    tune_length = 50,
                                     cv_fold = 8,
                                     note = NA,
                                     paramList = NA) {
