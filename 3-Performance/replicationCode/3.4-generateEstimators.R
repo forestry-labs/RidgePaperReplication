@@ -792,13 +792,15 @@ estimator_grid[["gbm"]] <- function(Xobs,
 # Tuning RuleFit -------------------------------------------------------------------
 estimator_grid[["pre"]] <- function(Xobs,
                                     Yobs,
-                                    tune_length = 50,
+                                    tune_length = 100,
                                     cv_fold = 8,
                                     note = NA,
                                     paramList = NA) {
   library(caret)
   library(pre)
 
+  encoder <- onehot::onehot(Xobs)
+  Xobs <- predict(encoder, Xobs)
 
   if (is.na(paramList[[1]])) {
     rule_fit <- list(
@@ -905,7 +907,7 @@ estimator_grid[["pre"]] <- function(Xobs,
                  learnrate = paramList$learnrate,
                  mtry = paramList$mtry)
 
-    return(list(model = e_fit))
+    return(list(model = e_fit, encoder = encoder))
   }
 }
 
@@ -1324,7 +1326,7 @@ predictor_grid <- list(
 
   "pre" = function(estimator, feat) {
     return(predict(estimator[[1]],
-                   newdata = feat))
+                   newdata = predict(estimator[[2]], feat)) %>% as.numeric)
   },
 
   "BART" = function(estimator, feat) {

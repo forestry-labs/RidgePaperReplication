@@ -23,7 +23,7 @@ library(TTR)
 library(reshape)
 library(viridis)
 
-X <- read.csv("replicationCode/9-run_all_cluster_resultsEMSE.csv", stringsAsFactors = FALSE)
+X <- read.csv("replicationCode/3-run_all_cluster_resultsEMSE.csv", stringsAsFactors = FALSE)
 # X <- X[22:36,-1]
 X$n <- as.numeric(gsub(pattern = "([^0123456789])", replacement = "", X$Dataset))
 X$Dataset <- gsub(pattern = "([-0123456789])", replacement = "", X$Dataset)
@@ -38,7 +38,9 @@ X$variable <- plyr::revalue(X$variable, c("caretRidgeRF_nonstrict" = "LRF (fores
                                           "ranger" = "RF (ranger)",
                                           "local_RF" = "LLF (grf)",
                                           "cubist" = "Cubist (Cubist)",
-                                          "glmnet" = "RLM (glmnet)"))
+                                          "glmnet" = "RLM (glmnet)",
+                                          "pre" = "RuleFit (pre)",
+                                          "gbm" = "GBM (gbm)"))
 
 
 X %>% filter(!is.na(value)) %>%
@@ -47,7 +49,7 @@ X %>% filter(!is.na(value)) %>%
   geom_line() +
   facet_wrap(.~Dataset, scales = "free_y") +
   #geom_text(aes(label = variable)) +
-  theme_bw() + 
+  theme_bw() +
   ylim(0, 2.5) +
   theme(legend.position = "none")
 
@@ -55,21 +57,21 @@ library(ggrepel)
 
 # Plot experiment 1
 for (expnm in c("Experiment_1")) {
-  X %>% 
-    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree") %>% 
-    dplyr::select(c(4)) %>% 
+  X %>%
+    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree" & variable != "X") %>%
+    dplyr::select(c(4)) %>%
     max() -> max
-  
-  X %>% 
-    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree") %>% 
-    dplyr::select(-Dataset, -dsname) %>% 
+
+  X %>%
+    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree"& variable != "X") %>%
+    dplyr::select(-Dataset, -dsname) %>%
     filter(n == 2048) -> end_values
-  
-  X %>% filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree") %>%
+
+  X %>% filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree"& variable != "X") %>%
     ggplot(aes(x = n, y = value, color = variable))  +
     geom_line() +
     #geom_text(aes(label = variable)) +
-    theme_bw() + 
+    theme_bw() +
     xlim(0, 2500) +
     ylim(-.2, max + .1)+
     theme(legend.position = "none") +
@@ -77,41 +79,42 @@ for (expnm in c("Experiment_1")) {
       aes(label = variable),
       data = end_values, color = c("#440154FF", "#443A83FF",
                                    "#31688EFF", "#21908CFF",
-                                   "#35B779FF", "#8FD744FF", "#FDE725FF"),
-      size = 3, force = 6,arrow = arrow(length = unit(0.01, "npc")),
+                                   "#35B779FF", "#8FD744FF", "#FDE725FF",
+                                   "#6DCD59FF", "#1F9E89FF"),
+      size = 3, force = 7,arrow = arrow(length = unit(0.01, "npc")),
       direction = "both", nudge_x = 80, nudge_y = .1, point.padding = .9
     )+
     # ggtitle(label = expnm) +
     ggtitle(label = "") +
     xlab("Sample Size") +
-    ylab("EMSE") + 
-    geom_point() + 
+    ylab("EMSE") +
+    geom_point() +
     scale_color_viridis_d()
-  
+
   ggsave(file = paste0("figures/varyn_", expnm, ".pdf"), height = 3.3, width = 6)
-  #ggsave(file = paste0("~/Dropbox/RidgeForestry_paper/figures/2-VaryNSim/varyn_", 
+  #ggsave(file = paste0("~/Dropbox/RidgeForestry_paper/figures/2-VaryNSim/varyn_",
   #                     expnm, ".pdf"), height = 3.3, width = 6)
-  
+
 }
 
 
 # Plot experiment 2
 for (expnm in c("Experiment_2")) {
-  X %>% 
-    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree") %>% 
-    dplyr::select(c(4)) %>% 
+  X %>%
+    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree"& variable != "X") %>%
+    dplyr::select(c(4)) %>%
     max() -> max
-  
-  X %>% 
-    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree") %>% 
-    dplyr::select(-Dataset, -dsname) %>% 
+
+  X %>%
+    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree"& variable != "X") %>%
+    dplyr::select(-Dataset, -dsname) %>%
     filter(n == 2048) -> end_values
-  
-  X %>% filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree") %>%
+
+  X %>% filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree"& variable != "X") %>%
     ggplot(aes(x = n, y = value, color = variable))  +
     geom_line() +
     #geom_text(aes(label = variable)) +
-    theme_bw() + 
+    theme_bw() +
     xlim(0, 2500) +
     ylim(-.1, max + .1)+
     theme(legend.position = "none") +
@@ -119,41 +122,42 @@ for (expnm in c("Experiment_2")) {
       aes(label = variable),
       data = end_values, color = c("#440154FF", "#443A83FF",
                                    "#31688EFF", "#21908CFF",
-                                   "#35B779FF", "#8FD744FF", "#FDE725FF"),
+                                   "#35B779FF", "#8FD744FF", "#FDE725FF",
+                                   "#6DCD59FF", "#1F9E89FF"),
       size = 3, force = 3,arrow = arrow(length = unit(0.01, "npc")),
       direction = "both", nudge_x = 25, nudge_y = 0, point.padding = .8
     )+
     # ggtitle(label = expnm) +
     ggtitle(label = "") +
     xlab("Sample Size") +
-    ylab("EMSE") + 
-    geom_point() + 
+    ylab("EMSE") +
+    geom_point() +
     scale_color_viridis_d()
-  
+
   ggsave(file = paste0("figures/varyn_", expnm, ".pdf"), height = 3.3, width = 6)
-  #ggsave(file = paste0("~/Dropbox/RidgeForestry_paper/figures/2-VaryNSim/varyn_", 
+  #ggsave(file = paste0("~/Dropbox/RidgeForestry_paper/figures/2-VaryNSim/varyn_",
   #                     expnm, ".pdf"), height = 3.3, width = 6)
-  
+
 }
 
 
 # Plot experiment 3
 for (expnm in c("Experiment_3")) {
-  X %>% 
-    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree") %>% 
-    dplyr::select(c(4)) %>% 
+  X %>%
+    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree"& variable != "X") %>%
+    dplyr::select(c(4)) %>%
     max() -> max
-  
-  X %>% 
-    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree") %>% 
-    dplyr::select(-Dataset, -dsname) %>% 
+
+  X %>%
+    filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree"& variable != "X") %>%
+    dplyr::select(-Dataset, -dsname) %>%
     filter(n == 2048) -> end_values
-  
-  X %>% filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree") %>%
+
+  X %>% filter(!is.na(value) & dsname == expnm & variable != "cubist" & variable != "caretRidgeTree"& variable != "X") %>%
     ggplot(aes(x = n, y = value, color = variable))  +
     geom_line() +
     #geom_text(aes(label = variable)) +
-    theme_bw() + 
+    theme_bw() +
     xlim(0, 2500) +
     ylim(-.1, max + .1)+
     theme(legend.position = "none") +
@@ -161,19 +165,20 @@ for (expnm in c("Experiment_3")) {
       aes(label = variable),
       data = end_values, color = c("#440154FF", "#443A83FF",
                                    "#31688EFF", "#21908CFF",
-                                   "#35B779FF", "#8FD744FF", "#FDE725FF"),
+                                   "#35B779FF", "#8FD744FF", "#FDE725FF",
+                                   "#6DCD59FF", "#1F9E89FF"),
       size = 3, force = 3,arrow = arrow(length = unit(0.01, "npc")),
       direction = "both", nudge_x = 25, nudge_y = 0, point.padding = .92
     )+
     # ggtitle(label = expnm) +
     ggtitle(label = "") +
     xlab("Sample Size") +
-    ylab("EMSE") + 
-    geom_point() + 
+    ylab("EMSE") +
+    geom_point() +
     scale_color_viridis_d()
-  
+
   ggsave(file = paste0("figures/varyn_", expnm, ".pdf"), height = 3.3, width = 6)
-  #ggsave(file = paste0("~/Dropbox/RidgeForestry_paper/figures/2-VaryNSim/varyn_", 
+  #ggsave(file = paste0("~/Dropbox/RidgeForestry_paper/figures/2-VaryNSim/varyn_",
   #                     expnm, ".pdf"), height = 3.3, width = 6)
-  
+
 }
