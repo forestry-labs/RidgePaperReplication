@@ -799,8 +799,11 @@ estimator_grid[["pre"]] <- function(Xobs,
   library(caret)
   library(pre)
 
-  encoder <- onehot::onehot(Xobs)
-  Xobs <- predict(encoder, Xobs)
+  if ("model" %in% names(Xobs)) {
+    Xobs <- Xobs %>% dplyr::select(-model, -fuelType, -gearbox)
+  }
+  # encoder <- onehot::onehot(Xobs)
+  # Xobs <- predict(encoder, Xobs)
 
   if (is.na(paramList[[1]])) {
     rule_fit <- list(
@@ -858,7 +861,8 @@ estimator_grid[["pre"]] <- function(Xobs,
                          newdata,
                          preProc = NULL,
                          submodels = NULL) {
-        #browser()
+        # browser()
+
         predict(modelFit, newdata)
       },
       prob = NULL
@@ -1325,8 +1329,11 @@ predictor_grid <- list(
   },
 
   "pre" = function(estimator, feat) {
+    if ("model" %in% names(feat)) {
+      feat <- feat %>% dplyr::select(-model, -fuelType, -gearbox)
+    }
     return(predict(estimator[[1]],
-                   newdata = predict(estimator[[2]], feat)) %>% as.numeric)
+                   newdata = feat))#predict(estimator[[2]], feat)) %>% as.numeric)
   },
 
   "BART" = function(estimator, feat) {
