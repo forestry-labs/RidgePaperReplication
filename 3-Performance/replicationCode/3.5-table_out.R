@@ -1,92 +1,8 @@
-library(tidyverse)
-library(xtable)
-library(ztable)
-library(magrittr)
-library(RColorBrewer)
-library(superheat)
-
-options(ztable.type="latex")
-
-# Output information about the data sets ---------------------------------------
-source("replicationCode/1.8-generateDataBrieman.R")
-source("replicationCode/1.9-DS_autos_bike_soe.R")
-
-data_set_info <- data.frame()
-for (i in 1:length(datasets_grid)) {
-  # i = 2
-  name <- names(datasets_grid)[i]
-  ds <- datasets_grid[[i]]
-  dim <- ncol(ds$train)
-  ntrain <- nrow(ds$train)
-  ntest <- nrow(ds$test)
-  
-  num_numeric <- 0
-  for (j in 1:dim) {
-    if (is.numeric(ds$test[,j])) num_numeric <- num_numeric + 1
-  }
-  
-  to_add <- data.frame(name, ntrain, ntest, dim, num_numeric)
-  data_set_info <- rbind(data_set_info, to_add)
-  
-}
-
-data_set_info <- 
-  data_set_info[!substr(data_set_info$name, 1,5) %in% c("Bosto", "Ozone", "Servo"), ]
-
-data_set_info <-
-  rbind(data_set_info,
-        data.frame(
-          name = "Ozone",
-          ntrain = 330,
-          ntest = NA,
-          dim = 9,
-          num_numeric = 9
-        ))
-data_set_info <-
-  rbind(data_set_info,
-        data.frame(
-          name = "Servo",
-          ntrain = 134+33,
-          ntest = NA,
-          dim = 13,
-          num_numeric = 13
-        ))
-data_set_info <-
-  rbind(data_set_info,
-        data.frame(
-          name = "Boston",
-          ntrain = 406+100,
-          ntest = NA,
-          dim = 9,
-          num_numeric = 9
-        ))
-data_set_info$name <- as.character(data_set_info$name)
-data_set_info <- data_set_info %>% dplyr::arrange(name)
-
-colnames(data_set_info)[5] <- "n numeric feat"
-data_set_info$name <- gsub("_", " ", data_set_info$name)
-
-data_set_info$name[2:3] <- c("Autos", "Bike")
-
-for (i in 1:ncol(data_set_info)) {
-  data_set_info[,i] <- as.character(data_set_info[,i])
-}
-
-print(
-  xtable(data_set_info, align = rep('r', ncol(data_set_info) + 1), 
-         caption = "The table summarizes the data sets.", label = "tbl:dssummary"),
-  include.rownames = FALSE,
-  # include.colnames = FALSE, 
-  sanitize.colnames.function = identity,
-  sanitize.text.function = identity,
-  latex.environments = "flushleft",
-  file = "~/Dropbox/RidgePaperReplication/3-Performance/figures/datasetTables.tex"
-)
-
 # Output information about the performance -------------------------------------
+# Run from here to get superheat table -----------------------------------------
 library(tidyverse)
-library(xtable)
-library(ztable)
+# library(xtable)
+# library(ztable)
 library(magrittr)
 library(RColorBrewer)
 library(superheat)
@@ -94,11 +10,11 @@ library(superheat)
 options(ztable.type="latex")
 
 
-X <- read.csv("replicationCode/9-run_all_cluster_resultsEMSE.csv", stringsAsFactors = FALSE)
+X <- read.csv("replicationCode/3-run_all_cluster_resultsEMSE.csv", stringsAsFactors = FALSE)
 X$Dataset <- gsub(pattern = "_fold[12345]", replacement = "", x = X$Dataset)
 
-X %>% 
-  group_by(Dataset) %>% 
+X %>%
+  group_by(Dataset) %>%
   summarize(forestryRF = mean(forestryRF),
             caretRidgeRF = mean(caretRidgeRF_nonstrict),
             caretRidgeTree = mean(caretRidgeTree),
@@ -106,12 +22,14 @@ X %>%
             glmnet = mean(glmnet),
             cubist = mean(cubist),
             local_RF = mean(local_RF),
-            BART = mean(BART)) %>%
+            BART = mean(BART),
+            GBM = mean(gbm),
+            RuleFit = mean(pre)) %>%
   dplyr::rename(RF_forestry = forestryRF,
-                Ridge_RF = caretRidgeRF, 
-                Ridge_Tree = caretRidgeTree, 
+                Ridge_RF = caretRidgeRF,
+                Ridge_Tree = caretRidgeTree,
                 RF_ranger = ranger) %>%
-  dplyr::select(Dataset, RF_forestry, RF_ranger, glmnet, BART, cubist, 
+  dplyr::select(Dataset, RF_forestry, RF_ranger, glmnet, BART, cubist,
                 Ridge_Tree, local_RF, Ridge_RF, everything()) ->
   X_toprint
 
@@ -140,22 +58,25 @@ colnames(X_toprint_char) <- gsub("_", " ", colnames(X_toprint_char))
 #X_toprint_char$Dataset[4] <- "Boston" # THIS MUST HAVE BEEN LEFT FROM EARLIER
 
 X_toprint_char
-X_toprint_char <- rbind(c("", "forestry", "ranger", "glmnet", "dbarts", "Cubist", "forestry", "grf", "forestry"), 
-      X_toprint_char)
-colnames(X_toprint_char) <- c("", "RF \n (forestry)", 
-                              "RF \n (ranger)", 
+X_toprint_char <- rbind(c("", "forestry", "ranger", "glmnet", "dbarts", "Cubist",
+                          "forestry", "grf", "forestry","gbm","pre"),
+                        X_toprint_char)
+colnames(X_toprint_char) <- c("", "RF \n (Rforestry)",
+                              "RF \n (ranger)",
                               "RLM \n (glmnet)",
                               "BART \n (dbarts)",
                               "Cubist \n (Cubist)",
-                              "LCART \n (forestry)",
+                              "LCART \n (Rforestry)",
                               "Local Linear Forest \n (grf)",
-                              "Linear RF \n (forestry)")
+                              "Linear RF \n (Rforestry)",
+                              "GBM \n (gbm)",
+                              "RuleFit \n (pre)")
 
 
 # SuperHeat Table ==============================================================
 library(matrixStats)
-z <- X_toprint_char[-c(3,4,5,6,7,16:25),]
-z_raw <- X_toprint[-c(2,3,4,5,6,15:24),-1]
+z <- X_toprint_char[c(2,8:15),]
+z_raw <- X_toprint[c(1,7:14),-1]
 
 row_ranks <- rowRanks(as.matrix(z_raw))
 mean_ranks <- t(as.matrix(colMeans(as.data.frame(row_ranks))))
@@ -163,58 +84,61 @@ mean_ranks <- round(mean_ranks, digits = 2)
 mean_rank_data <- cbind("Mean Rank", as.data.frame(mean_ranks))
 colnames(mean_rank_data) <- names(z)
 z <- rbind(z, mean_rank_data[1,])
-
+z_raw <- rbind(z_raw, mean_ranks[1,])
 # Create mean rank =============================================================
 
 names(z)
-k <- z
-k[,2] <- z[,4]
-k[,4] <- z[,2]
-z <- k
 
-colnames(z) <- c("", "RLM \n (glmnet)", 
-                     "RF \n (ranger)", 
-                     "RF \n (forestry)",
-                     "BART \n (dbarts)",
-                     "Cubist \n (Cubist)",
-                     "LCART \n (forestry)",
-                     "LLF \n (grf)",
-                     "LRF \n (forestry)")
+
+
+z <- z[,c(1,4,3,2,5:11)]
+z_raw <- z_raw[,c(3,2,1,4:10)]
+
+
+colnames(z) <- c("", "RLM \n (glmnet)",
+                 "RF \n (ranger)",
+                 "RF \n (Rforestry)",
+                 "BART \n (dbarts)",
+                 "Cubist \n (Cubist)",
+                 "LCART \n (Rforestry)",
+                 "LLF \n (grf)",
+                 "LRF \n (Rforestry)",
+                 "GBM \n (gbm)",
+                 "RuleFit \n (pre)")
 
 names <- z[,1]
 z <- z[,-1]
 row.names(z) <- names
 
-names <- z[1,]
-z <- z[-1,]
 #colnames(z) <- names
-
-z[,1]
-
-mat <- data.matrix(z)
-
-
-rows <- row.names(z)
+# mat <- data.matrix(z)
+#
+#
+# rows <- row.names(z)
 #mat[,c(3,8)] = NA
 
-a <- data.matrix(t(scale(t(mat))))
+a <- data.matrix(t(scale(t(z_raw))))
 
 attr(a,"scaled:center")<-NULL
 attr(a,"scaled:scale")<-NULL
-mat[is.na(mat)] <- 0.0
 
 a[,c(1)] = NA
 
-png("performance.png", height = 900, width = 1500)
+rownames(a) <- rownames(z)
+colnames(a) <- colnames(z)
+
+a <- a[,c(1:7,9:10,8)]
+z <- z[,c(1:7,9:10,8)]
+
+png("performance.png", height = 900, width = 1800)
 
 superheat(data.matrix(a),
-          X.text = round(as.matrix(mat), 2),
+          X.text = as.matrix(z),
           X.text.size = 10,
           heat.na.col = "grey",
-          title = "Performance on Real Datasets",
           title.size = 18,
           legend = FALSE,
-          order.rows = nrow(mat):1,
+          order.rows = nrow(z):1,
           heat.pal = c("green", "yellow", "red"),
           bottom.label.text.angle = 90,
           grid.hline = FALSE,
@@ -222,3 +146,4 @@ superheat(data.matrix(a),
           left.label.text.size = 11,
           bottom.label.text.size = 8)
 dev.off()
+
