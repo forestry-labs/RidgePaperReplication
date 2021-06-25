@@ -271,10 +271,6 @@ print("running things in parallel")
 # The following code will run all the simulations from Section 3
 # in order to only run a subset, one can call the batch_func
 # with the desired job_id's only
-
-all_jobs[251,]
-batch_func(i = 251, force = TRUE, run_saved = FALSE)
-
 foreach(i = which(all_jobs$Estimator %in% c("gbm", "pre"))) %dopar% {
   print(paste("RUNNING", all_jobs[i, 1], "----", all_jobs[i, 2]))
 
@@ -285,6 +281,5 @@ foreach(i = which(all_jobs$Estimator %in% c("gbm", "pre"))) %dopar% {
   print(paste("Done with", all_jobs[i,1], "----", all_jobs[i,2]))
 }
 
-
-
+# Once we have finished running the sims, save results again in EMSE and Runtime files
 update_tables()

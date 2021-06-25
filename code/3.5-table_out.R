@@ -57,7 +57,7 @@ X_toprint_char$Dataset <- gsub("_", " ", X_toprint_char$Dataset)
 colnames(X_toprint_char) <- gsub("_", " ", colnames(X_toprint_char))
 #X_toprint_char$Dataset[4] <- "Boston" # THIS MUST HAVE BEEN LEFT FROM EARLIER
 
-X_toprint_char
+# X_toprint_char
 X_toprint_char <- rbind(c("", "forestry", "ranger", "glmnet", "dbarts", "Cubist",
                           "forestry", "grf", "forestry","gbm","pre"),
                         X_toprint_char)
@@ -87,7 +87,7 @@ z <- rbind(z, mean_rank_data[1,])
 z_raw <- rbind(z_raw, mean_ranks[1,])
 # Create mean rank =============================================================
 
-names(z)
+# names(z)
 
 
 
@@ -130,7 +130,7 @@ colnames(a) <- colnames(z)
 a <- a[,c(1:7,9:10,8)]
 z <- z[,c(1:7,9:10,8)]
 
-png("performance.png", height = 900, width = 1800)
+png("figures/performance.png", height = 900, width = 1800)
 
 superheat(data.matrix(a),
           X.text = as.matrix(z),

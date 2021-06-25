@@ -1,25 +1,8 @@
-if (dir.exists("~/Dropbox/ridgeEvaluation/")) {
-  setwd("~/Dropbox/ridgeEvaluation/")
-} else if (dir.exists("~/ridgeEvaluationCode/")) {
-  setwd("~/ridgeEvaluationCode/")
-} else if (dir.exists("~/ridgeEvaluation/")) {
-  setwd("~/ridgeEvaluation/")
-} else if (dir.exists("/accounts/projects/sekhon/theo_s/gdrive/ridgeEvaluation")) {
-  setwd("/accounts/projects/sekhon/theo_s/gdrive/ridgeEvaluation")
-} else {
-  stop("wd was not set correctly")
-}
 library(tidyverse)
-library(xtable)
 library(reshape)
 library(MASS)
 library(ggplot2)
 library(dplyr)
-library(caret)
-library(pdp)
-library(iml)
-library(dbarts)
-library(TTR)
 library(reshape)
 library(viridis)
 
@@ -43,15 +26,15 @@ X$variable <- plyr::revalue(X$variable, c("caretRidgeRF_nonstrict" = "LRF (fores
                                           "gbm" = "GBM (gbm)"))
 
 
-X %>% filter(!is.na(value)) %>%
-  # filter(variable %in% c("ranger", "glmnet", "local_RF")) %>%
-  ggplot(aes(x = n, y = value, color = variable))  +
-  geom_line() +
-  facet_wrap(.~Dataset, scales = "free_y") +
-  #geom_text(aes(label = variable)) +
-  theme_bw() +
-  ylim(0, 5.5) +
-  theme(legend.position = "none")
+# X %>% filter(!is.na(value)) %>%
+#   # filter(variable %in% c("ranger", "glmnet", "local_RF")) %>%
+#   ggplot(aes(x = n, y = value, color = variable))  +
+#   geom_line() +
+#   facet_wrap(.~Dataset, scales = "free_y") +
+#   #geom_text(aes(label = variable)) +
+#   theme_bw() +
+#   ylim(0, 5.5) +
+#   theme(legend.position = "none")
 
 library(ggrepel)
 
