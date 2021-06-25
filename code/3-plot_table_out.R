@@ -10,7 +10,7 @@ library(superheat)
 options(ztable.type="latex")
 
 
-X <- read.csv("replicationCode/3-run_all_cluster_resultsEMSE.csv", stringsAsFactors = FALSE)
+X <- read.csv("code/3-run_all_cluster_resultsEMSE.csv", stringsAsFactors = FALSE)
 X$Dataset <- gsub(pattern = "_fold[12345]", replacement = "", x = X$Dataset)
 
 X %>%

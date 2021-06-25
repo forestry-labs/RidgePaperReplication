@@ -6,5 +6,4 @@
 #SBATCH --cpus-per-task=32
 
 ml R
-Rscript replicationCode/3-run_all_cluster.R performance_sims_output.out
-
+Rscript replicationCode/3-run_all_sims.R performance_sims_output.out

@@ -6,7 +6,7 @@ library(dplyr)
 library(reshape)
 library(viridis)
 
-X <- read.csv("replicationCode/3-run_all_cluster_resultsEMSE.csv", stringsAsFactors = FALSE)
+X <- read.csv("code/3-run_all_cluster_resultsEMSE.csv", stringsAsFactors = FALSE)
 # X <- X[1:15,-1]
 X$n <- as.numeric(gsub(pattern = "([^0123456789])", replacement = "", X$Dataset))
 X$Dataset <- gsub(pattern = "([-0123456789])", replacement = "", X$Dataset)
@@ -24,17 +24,6 @@ X$variable <- plyr::revalue(X$variable, c("caretRidgeRF_nonstrict" = "LRF (fores
                                           "glmnet" = "RLM (glmnet)",
                                           "pre" = "RuleFit (pre)",
                                           "gbm" = "GBM (gbm)"))
-
-
-# X %>% filter(!is.na(value)) %>%
-#   # filter(variable %in% c("ranger", "glmnet", "local_RF")) %>%
-#   ggplot(aes(x = n, y = value, color = variable))  +
-#   geom_line() +
-#   facet_wrap(.~Dataset, scales = "free_y") +
-#   #geom_text(aes(label = variable)) +
-#   theme_bw() +
-#   ylim(0, 5.5) +
-#   theme(legend.position = "none")
 
 library(ggrepel)
 

@@ -18,11 +18,7 @@ library(doParallel)
 #         clustermq.template = "~/clustermq_high.tmpl")
 #~/clustermq_low.tmpl ~/clustermq_high.tmpl
 
-dir.create("replicationCode/3-results/", showWarnings = FALSE)
-
-data_folder_name <- "replicationCode/estimates/"
-dir.create(data_folder_name, showWarnings = FALSE)
-
+dir.create("results/", showWarnings = FALSE)
 
 set.seed(5387479)
 
@@ -48,8 +44,8 @@ update_tables <- function(){
   # in 3-run_all_cluster_results.csv
 
   # updates all_jobs
-  for (file in dir("replicationCode/3-results/")) {
-    results <- read.csv(paste0("replicationCode/3-results/", file))
+  for (file in dir("results/")) {
+    results <- read.csv(paste0("results/", file))
     this_row <-
       as.character(all_jobs$Dataset) == as.character(results$Dataset) &
       as.character(all_jobs$Estimator) == as.character(results$Estimator)
@@ -61,12 +57,12 @@ update_tables <- function(){
                                 formula = Dataset ~ Estimator,
                                 value.var = "EMSE")
   write.csv(x = EMSE_table,
-            file = "replicationCode/3-run_all_cluster_resultsEMSE.csv")
+            file = "code/3-run_all_cluster_resultsEMSE.csv")
   Runtime_table <- reshape2::dcast(data = all_jobs,
                                    formula = Dataset ~ Estimator,
                                    value.var = "runtime")
   write.csv(x = Runtime_table,
-            file = "replicationCode/3-run_all_cluster_resultsRuntime.csv")
+            file = "code/3-run_all_cluster_resultsRuntime.csv")
 }
 
 # run the jobs -----------------------------------------------------------------
@@ -75,7 +71,7 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
   set.seed(6264175)
   (this_job <- all_jobs[i, ])
 
-  (filename <- paste0("replicationCode/3-results/job_",
+  (filename <- paste0("results/job_",
                      this_job$Dataset, "_",
                      this_job$Estimator,".csv"))
 
@@ -93,12 +89,12 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
     run_saved = FALSE
   }
 
-  if ((!substr(filename, 27, 1000) %in% dir("replicationCode/3-results")) |
+  if ((!substr(filename, 8, 1000) %in% dir("results")) |
       force) {
 
     ds <- datasets_grid[[as.character(this_job$Dataset)]]
     pd <- predictor_grid[[as.character(this_job$Estimator)]]
-    # run the current job this will save the results in 3-results/
+    # run the current job this will save the results in esults/
     tm <- microbenchmark::microbenchmark({
       # If we don't want to run with saved hyperparameters
       if (!run_saved) {
@@ -109,7 +105,7 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
       # Else check that the hyperparameters exist
       } else if (run_saved) {
         es_name <- es_names[[as.character(this_job$Estimator)]]
-        loaded_model <- readRDS(paste0("replicationCode/tuningParam/",es_name,this_job$Dataset,".RDS"))
+        loaded_model <- readRDS(paste0("tuningParam/",es_name,this_job$Dataset,".RDS"))
 
         # If we have reloaded a forestry object, relink the C++ ptr will not work
         # as this is an old version of forestry, so we pull the hyperparameters
