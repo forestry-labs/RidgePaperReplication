@@ -39,7 +39,7 @@ mean_coefs <- apply(preds$coef, 2, mean)
 
 
 val <- data.frame(Variable = 1:4,
-                  variable = c("V1", "V2", "V3", "V4"),
+                  variable = c("X1", "X2", "X3", "X4"),
                   value = mean_coefs[1:4])
 
 ggplot(data = data.frame(Variable = 1:100, value = mean_coefs[-101]),
@@ -53,7 +53,7 @@ ggplot(data = data.frame(Variable = 1:100, value = mean_coefs[-101]),
     direction = "both", nudge_x = 20, nudge_y = -0.001, point.padding = .8
   )+
   labs(x = "Variable", y = "Mean Ridge Coefficient")
-ggsave(filename = "figures/high_dim_coefficients.pdf")
+ggsave(filename = "figures/high_dim_coefficients.pdf", height = 4, width = 5)
 
 
 
