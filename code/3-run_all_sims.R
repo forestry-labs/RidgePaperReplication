@@ -22,10 +22,10 @@ dir.create("results/", showWarnings = FALSE)
 
 set.seed(5387479)
 
-source("replicationCode/3.1-generateDataVaryingN.R")
-source("replicationCode/3.2-generateDataBrieman.R")
-source("replicationCode/3.3-DS_autos_bike_soe.R")
-source("replicationCode/3.4-generateEstimators.R")
+source("code/3.1-generateDataVaryingN.R")
+source("code/3.2-generateDataBrieman.R")
+source("code/3.3-DS_autos_bike_soe.R")
+source("code/3.4-generateEstimators.R")
 # generate all the different jobs and save it ----------------------------------
 (ds_names <- names(datasets_grid))
 (etm_names <- names(estimator_grid))

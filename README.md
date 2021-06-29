@@ -24,9 +24,9 @@ In order to run all the simulations for Section 3 on a SLURM cluster, one should
 sbatch jobs/submit_performance_sims.sh
 ```
 In order to run all simulations locally, one should run:
-``
+```
 Rscript code/3-run_all_sims.R
-``
+```
 This file also contains instructions for how to run the simulations without using 
 the already tuned hyperparameters.
 

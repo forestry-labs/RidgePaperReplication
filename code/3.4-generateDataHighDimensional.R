@@ -9,6 +9,9 @@ nonlinear_func <- function(x) {
   return(2/(1+exp(-12*(x-.5))))
 }
 
+
+datasets_grid <- list()
+
 # A high dimensional simulation inspired by Wager and Athey 2018 ===============
 n_train <- 500
 n_test <- 10000
@@ -21,7 +24,7 @@ y <- sapply(x[,1], nonlinear_func)*sapply(x[,2], nonlinear_func) +
 data <- data.frame(x,y)
 
 datasets_grid[["HighDimensionalSmall"]] <- list(
-  "train" = data[1:n_train,] + rnorm(n_train, sd = 2),
+  "train" = data[1:n_train,] + rnorm(n_train, sd = 1),
   "test" = data[(n_train+1):(n_train + n_test),]
 )
 
@@ -37,7 +40,7 @@ y <- sapply(x[,1], nonlinear_func)*sapply(x[,2], nonlinear_func) +
 data <- data.frame(x,y)
 
 datasets_grid[["HighDimensionalLarge"]] <- list(
-  "train" = data[1:n_train,] + rnorm(n_train, sd = 2),
+  "train" = data[1:n_train,] + rnorm(n_train, sd = 1),
   "test" = data[(n_train+1):(n_train + n_test),]
 )
 
