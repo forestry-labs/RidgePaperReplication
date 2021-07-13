@@ -16,6 +16,7 @@ datasets_grid <- list()
 n_train <- 500
 n_test <- 10000
 n <- n_train + n_test
+sd <- .5
 
 x <- data.frame(matrix(rnorm(n*p), ncol = p, nrow = n))
 y <- sapply(x[,1], nonlinear_func)*sapply(x[,2], nonlinear_func) +
@@ -24,7 +25,7 @@ y <- sapply(x[,1], nonlinear_func)*sapply(x[,2], nonlinear_func) +
 data <- data.frame(x,y)
 
 datasets_grid[["HighDimensionalSmall"]] <- list(
-  "train" = data[1:n_train,] + rnorm(n_train, sd = 1),
+  "train" = data[1:n_train,] + rnorm(n_train, sd = sd),
   "test" = data[(n_train+1):(n_train + n_test),]
 )
 
@@ -40,7 +41,7 @@ y <- sapply(x[,1], nonlinear_func)*sapply(x[,2], nonlinear_func) +
 data <- data.frame(x,y)
 
 datasets_grid[["HighDimensionalLarge"]] <- list(
-  "train" = data[1:n_train,] + rnorm(n_train, sd = 1),
+  "train" = data[1:n_train,] + rnorm(n_train, sd = sd),
   "test" = data[(n_train+1):(n_train + n_test),]
 )
 
