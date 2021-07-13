@@ -32,7 +32,10 @@ X$variable <- plyr::revalue(X$variable, c("caretRidgeRF_nonstrict" = "LRF (fores
 
 library(ggrepel)
 
-colors <-c( "#440154FF", "#21908CFF", "#FDE725FF")
+colors <-c( "#440154FF", "#1E9B8AFF", "#E0E318FF")
+mapping <- c("LRF (forestry)" ="#440154FF",
+             "RuleFit (pre)" = "#E0E318FF",
+             "GBM (gbm)" = "#1E9B8AFF")
 
 # Plot experiment 1
 for (expnm in c("Experiment_1")) {
@@ -53,6 +56,7 @@ for (expnm in c("Experiment_1")) {
     theme_bw() +
     xlim(0, 2500) +
     ylim(-.2, max + .1)+
+    scale_color_manual(values = mapping)+
     theme(legend.position = "none") +
     geom_text_repel(
       aes(label = variable),
@@ -64,8 +68,7 @@ for (expnm in c("Experiment_1")) {
     ggtitle(label = "") +
     xlab("Sample Size") +
     ylab("EMSE") +
-    geom_point() +
-    scale_color_viridis_d()
+    geom_point()
 
   ggsave(file = paste0("figures/add_varyn_", expnm, ".pdf"), height = 3.3, width = 6)
   #ggsave(file = paste0("~/Dropbox/RidgeForestry_paper/figures/2-VaryNSim/varyn_",
@@ -89,6 +92,7 @@ for (expnm in c("Experiment_2")) {
   X %>% filter(!is.na(value) & dsname == expnm & variable %in% c("LRF (forestry)","RuleFit (pre)","GBM (gbm)")) %>%
     ggplot(aes(x = n, y = value, color = variable))  +
     geom_line() +
+    scale_color_manual(values = mapping)+
     #geom_text(aes(label = variable)) +
     theme_bw() +
     xlim(0, 2500) +
@@ -104,8 +108,7 @@ for (expnm in c("Experiment_2")) {
     ggtitle(label = "") +
     xlab("Sample Size") +
     ylab("EMSE") +
-    geom_point() +
-    scale_color_viridis_d()
+    geom_point()
 
   ggsave(file = paste0("figures/add_varyn_", expnm, ".pdf"), height = 3.3, width = 6)
   #ggsave(file = paste0("~/Dropbox/RidgeForestry_paper/figures/2-VaryNSim/varyn_",
@@ -129,6 +132,7 @@ for (expnm in c("Experiment_3")) {
   X %>% filter(!is.na(value) & dsname == expnm & variable %in% c("LRF (forestry)","RuleFit (pre)","GBM (gbm)")) %>%
     ggplot(aes(x = n, y = value, color = variable))  +
     geom_line() +
+    scale_color_manual(values = mapping)+
     #geom_text(aes(label = variable)) +
     theme_bw() +
     xlim(0, 2500) +
@@ -144,8 +148,7 @@ for (expnm in c("Experiment_3")) {
     ggtitle(label = "") +
     xlab("Sample Size") +
     ylab("EMSE") +
-    geom_point() +
-    scale_color_viridis_d()
+    geom_point()
 
   ggsave(file = paste0("figures/add_varyn_", expnm, ".pdf"), height = 3.3, width = 6)
   #ggsave(file = paste0("~/Dropbox/RidgeForestry_paper/figures/2-VaryNSim/varyn_",
