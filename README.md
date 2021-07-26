@@ -3,8 +3,8 @@
 This repository contains the necessary code to replicate the results from the most recent version of the paper: "Linear Aggregation in Tree-based Estimators." 
 This draft can be found at: https://arxiv.org/abs/1906.06463.
 
-In order to run the replication code, the *Rforestry* package is required.
-The *Rforestry* package can be installed using:
+In order to run the replication code, the **Rforestry** package is required.
+The **Rforestry** package can be installed using:
 ```
 install.packages("Rforestry")
 ```
@@ -16,11 +16,11 @@ The script to recreate Figure 1 can be found in `code/1-createIntoFigure.R`.
 # Performance Simulations
 
 In order to replicate the simulations in Section 3, we provide the scripts in the `code/` folder.
-For the paper, we tuned the hyperparameters for each estimator using the *caret* package, and 
+For the paper, we tuned the hyperparameters for each estimator using the **caret** package, and 
 averaged the results over four runs.
-The hyperparameters found by *caret* can be found in the `tuningParam` folder.
+The hyperparameters found by **caret** can be found in the `tuningParam` folder.
 This takes a long time even when running on the cluster, so we have currently configured
-the code to use the hyperparameters selected by *caret*, and only run once. 
+the code to use the hyperparameters selected by **caret**, and only run once. 
 This should make the results run much quicker on either a personal computer, or the cluster.
 
 In order to run all the simulations for Section 3 on a SLURM cluster, one should run:
@@ -31,7 +31,7 @@ In order to run all simulations locally, one should run:
 ```
 Rscript code/3-run_all_sims.R
 ```
-In order to run the simulation on a cluster, using the hyperparameters selected by *caret*,
+In order to run the simulation on a cluster, using the hyperparameters selected by **caret**,
 one should run the script `jobs/submit_performance_sims.sh`.
 
 In order to retune the hyperparameters, one can switch the final block in `code/3-run_all_sims.R` to use `batch_func(i = i, force = TRUE, run_saved = FALSE)`. 
