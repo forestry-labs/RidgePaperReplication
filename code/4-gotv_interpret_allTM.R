@@ -1,25 +1,32 @@
 # devtools::install_github("soerenkuenzel/causalToolbox")
 # devtools::install_github("soerenkuenzel/forestry", ref = "splitting-features")
-devtools::load_all("~/Dropbox/Rforestry/")
+# devtools::load_all("~/Dropbox/Rforestry/")
 # library(forestry)
 library(visNetwork)
 library(tidyverse)
 
-load("GerberGreenLarimer_r1b.RData", verbose = TRUE)
-social <- tbl_df(social)[,-1] %>% 
+# load("GerberGreenLarimer_r1b.RData", verbose = TRUE)
+social <- read.csv(file = "data/GerberGreenLarimer_APSR.csv")
+social <- tbl_df(social)[,-1] %>%
   dplyr::mutate(
     WC = ifelse(treatment == " Civic Duty", 1, 0),
     WH = ifelse(treatment == " Hawthorne", 1, 0),
     WS = ifelse(treatment == " Self", 1, 0),
     WN = ifelse(treatment == " Neighbors", 1, 0),
-    y = b.voted
-  ) %>% 
+    g2000 = ifelse(g2000 == "yes", 1, 0),
+    g2002 = ifelse(g2002 == "yes", 1, 0),
+    p2000 = ifelse(p2000 == "yes", 1, 0),
+    p2002 = ifelse(p2002 == "yes", 1, 0),
+    p2004 = ifelse(p2004 == "yes", 1, 0),
+    age = 2008-yob,
+    y = ifelse(voted == "Yes", 1, 0)
+  ) %>%
   select(y, WC, WH, WS, WN, g2000, g2002, p2000, p2002, p2004, age)
 
-social$p2004 <- factor(gsub("Y", "y", gsub("N", "n", social$p2004)))
-social$CVH <- apply(social[, c("g2000", "g2002", "p2000", "p2002", "p2004")] == "yes", 1, sum)
-social$CGVH <- apply(social[, c("g2000", "g2002")] == "yes", 1, sum)
-social$CPVH <- apply(social[, c("p2000", "p2002", "p2004")] == "yes", 1, sum)
+social$CVH <- apply(social[, c("g2000", "g2002", "p2000", "p2002", "p2004")] == 1, 1, sum)
+social$CGVH <- apply(social[, c("g2000", "g2002")] == 1, 1, sum)
+social$CPVH <- apply(social[, c("p2000", "p2002", "p2004")] == 1, 1, sum)
+
 
 summary(social)
 
@@ -29,20 +36,20 @@ custom_plot <- function(pdta) {
   nodes <- pdta[[2]]
   edges <- pdta[[3]]
   coefs <- pdta[[4]]
-  tree.id <- pdta[[5]] 
-  
+  tree.id <- pdta[[5]]
+
   # min_TE <- min(do.call("rbind", coefs)[,2]) * 100
   # max_TE <- max(do.call("rbind", coefs)[,2]) * 100
   min_TE <- 3
   max_TE <- 11.5
   color_code <- data.frame(value = seq(min_TE, max_TE, length.out = 100))
   color_code$color <- as.character(colorRampPalette(c("red", "yellow", "green"))(100))
-  
-  for (i in which(node_info$is_leaf)) {
+
+  for (i in node_info$nodes) {
     # i = which(node_info$is_leaf)[1]
     coefs_this <- coefs[[as.character(i)]]
     ni <- node_info[i,]
-    
+
 
     convert_num <- function(x) {
       x_rnd <- round(x * 100, 1)
@@ -63,7 +70,7 @@ custom_plot <- function(pdta) {
     nodes$color[i]  <- as.character(color_code$color[
       which.min((color_code$value - round(coefs_this[5] * 100, 1))^2)])
   }
-  
+
   (p1 <-
       visNetwork(
         nodes,
@@ -74,34 +81,33 @@ custom_plot <- function(pdta) {
       ) %>%
       visEdges(arrows = "to") %>%
       visHierarchicalLayout() %>% visExport(type = "png", name = "ridge_tree"))
-  
+
 }
 
 # Tree 2: Slearner and we look at W: -------------------------------------------
 rft <- forestry(x = as.data.frame(social %>% select(-y)),
-                y = social$y, 
+                y = social$y,
                 mtry = ncol(social) - 1,
                 sample.fraction = 1,
-                nodesizeStrictSpl = 5000,
-                ntree = 8,
+                nodesizeStrictSpl = 10000,
+                ntree = 4,
                 minSplitGain = .005,
-                ridgeRF = TRUE,
-                overfitPenalty = 0.00000001,
-                # linFeats = 1:4,
+                linear = TRUE,
+                overfitPenalty = 1e-8,
+                linFeats = 1:4,
                 middleSplit = TRUE,
-                verbose = TRUE,
+                verbose = FALSE,
                 splitratio = .5)
 
+source(file = "code/4-gotv_S_plot_fkt.R")
+
 # pdta <- plot(rft, tree.id = 1, return.plot.dta = TRUE)
-custom_plot(plot.forestry(x = rft, tree.id = 1, return.plot.dta = TRUE))
-custom_plot(plot(rft, tree.id = 2, return.plot.dta = TRUE))
-custom_plot(plot(rft, tree.id = 3, return.plot.dta = TRUE))
-custom_plot(plot(rft, tree.id = 4, return.plot.dta = TRUE))
-custom_plot(plot(rft, tree.id = 5, return.plot.dta = TRUE))
-custom_plot(plot(rft, tree.id = 6, return.plot.dta = TRUE))
-custom_plot(plot(rft, tree.id = 7, return.plot.dta = TRUE))
-custom_plot(plot(rft, tree.id = 8, return.plot.dta = TRUE))
+
+plotit(x = rft, tree.id = 1)
+plotit(x = rft, tree.id = 2)
+plotit(x = rft, tree.id = 3)
+plotit(x = rft, tree.id = 4)
 
 
 # 3. Create 6 nice looking trees with the same message
-# 4. Write that it is important to create many trees + honesty 
+# 4. Write that it is important to create many trees + honesty
