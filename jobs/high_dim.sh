@@ -6,7 +6,7 @@
 #SBATCH --time=1-00:00:00
 #SBATCH --array=1-200
 
-LINE=$(sed -n ${SLURM_ARRAY_TASK_ID}p "params.txt")
+LINE=$(sed -n ${SLURM_ARRAY_TASK_ID}p "seeds.txt")
 seed=$(echo $LINE | cut -d ' ' -f 3)
 
 Rscript code/1-highDimensionalSims.R --seed "$seed"
