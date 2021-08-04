@@ -64,6 +64,7 @@ The plot will then be found in `figures`.
 # Interpretability Plots
 
 The code to generate the figures from Section 4 can be found in `code/4-gotv_interpret_allTM.R`.
+This relies on the data in `data/GerberGreenLarimer_APSR.csv`.
 
 # Appendix Results
 

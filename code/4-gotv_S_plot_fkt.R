@@ -1,17 +1,22 @@
 # plot function ----------------------------------------------------------------
 
-plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
+plotit <- function(x, tree.id = 1, print.meta_dta = FALSE,
                           beta.char.len = 30, ...) {
   if (x@ntree < tree.id | 1 > tree.id) {
     stop("tree.id is too large or too small.")
   }
-  
+
   forestry_tree <- make_savable(x)
-  
+
   feat_names <- colnames(forestry_tree@processed_dta$processed_x)
   split_feat <- forestry_tree@R_forest[[tree.id]]$var_id
   split_val <- forestry_tree@R_forest[[tree.id]]$split_val
-  
+
+  min_TE <- 2
+  max_TE <- 15
+  color_code <- data.frame(value = seq(min_TE, max_TE, length.out = 100))
+  color_code$color <- as.character(colorRampPalette(c("white", "green"))(100))
+
   # get info for the first node ------------------------------------------------
   root_is_leaf <- split_feat[1] < 0
   node_info <- data.frame(
@@ -32,7 +37,7 @@ plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
     split_feat <- split_feat[-1]
     split_val <- split_val[-1]
   }
-  
+
   # loop through split feat to get all the information -------------------------
   while (length(split_feat) != 0) {
     if (!node_info$is_leaf[nrow(node_info)]) {
@@ -86,18 +91,18 @@ plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
       split_val <- split_val[-1]
     }
   }
-  
+
   for (i in nrow(node_info):1) {
     if (node_info$num_splitting[i] != 0) {
       node_info$num_splitting[node_info$parent[i]] <-
         node_info$num_splitting[node_info$parent[i]] + node_info$num_splitting[i]
-      
+
       node_info$num_averaging[node_info$parent[i]] <-
         node_info$num_averaging[node_info$parent[i]] + node_info$num_averaging[i]
     }
   }
-  
-  
+
+
   # Save more information about the splits -------------------------------------
   feat_names <- colnames(forestry_tree@processed_dta$processed_x)
   node_info$feat_nm <- NA
@@ -108,7 +113,7 @@ plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
     cat_feats <- names(forestry_tree@processed_dta$categoricalFeatureCols_cpp)
     node_info$is_cat_feat <- node_info$feat_nm %in% cat_feats
     node_info$cat_split_value <- as.character(node_info$split_val)
-    
+
     cat_feat_map <- forestry_tree@categoricalFeatureMapping
     if (length(cat_feat_map) > 0) {
       for (i in 1:length(cat_feat_map)) {
@@ -116,30 +121,30 @@ plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
         nodes_with_this_split <-
           node_info$split_feat == cat_feat_map[[i]]$categoricalFeatureCol &
           (!is.na(node_info$split_feat))
-        
+
         node_info$cat_split_value[nodes_with_this_split] <-
           as.character(cat_feat_map[[i]]$uniqueFeatureValues[
             node_info$split_val[nodes_with_this_split]])
       }
     }
   }
-  
-  
+
+
   # get the observation ids per leaf -------------------------------------------
   ave_idx <- forestry_tree@R_forest[[tree.id]]$leafAveidx
-  
+
   leaf_idx <- list()
   for (leaf_id in node_info$node_id[node_info$is_leaf]) {
     # leaf_id <- 4
-    
+
     these_idces <- 1:(node_info$num_averaging[node_info$node_id == leaf_id])
-    
+
     leaf_idx[[leaf_id]] <- ave_idx[these_idces]
     ave_idx <- ave_idx[-these_idces]
   }
-  
+
   # Prepare data for VisNetwork ------------------------------------------------
-  
+
   nodes <- data.frame(
     id = node_info$node_id,
     shape = ifelse(node_info$is_leaf,
@@ -151,7 +156,7 @@ plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
     ),
     level = node_info$level
   )
-  
+
   edges <- data.frame(
     from = node_info$parent,
     to = node_info$node_id,
@@ -162,8 +167,8 @@ plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
     )
   )
   edges <- edges[-1, ]
-  
-  
+
+
   edges$label =
     ifelse(
       floor(node_info$split_val[edges$from]) == node_info$split_val[edges$from],
@@ -178,25 +183,27 @@ plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
         paste0(" >= ", round(node_info$split_val[edges$from], digits = 2))
       )
     )
-  
+
   edges$width = node_info$num_averaging[edges$to] /
     (node_info$num_averaging[1] / 4)
-  
+
   # collect data for leaves ----------------------------------------------------
   nodes$label <- as.character(nodes$label)
   nodes$title <- as.character(nodes$label)
-  
-  
+
+  nodes$color <- rep("#FFFFFF", nrow(nodes))
+
   dta_x <- forestry_tree@processed_dta$processed_x
   dta_y <- forestry_tree@processed_dta$y
-  
-  if (forestry_tree@ridgeRF) {
+
+  if (forestry_tree@linear) {
     # ridge forest
+    leaf_node_count <- 1
     for (leaf_id in node_info$node_id[node_info$is_leaf]) {
       # leaf_id = 1
       ###
       this_ds <- dta_x[leaf_idx[[leaf_id]],
-                       forestry_tree@linFeats + 1, drop = FALSE]
+                       forestry_tree@linFeats, drop = FALSE]
       encoder <- onehot::onehot(this_ds)
       remat <- predict(encoder, this_ds)
       ###
@@ -205,7 +212,7 @@ plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
         plm_pred <- c(dta_y_leaf[1], rep(0, ncol(remat)))
         r_squared = 1
       } else {
-        
+
         remat.is.of.dim.one <- FALSE
         if(ncol(remat) == 1) {
           remat.is.of.dim.one <- TRUE
@@ -215,7 +222,7 @@ plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
                               y = dta_y_leaf,
                               lambda = forestry_tree@overfitPenalty,
                               alpha	= 0)
-        
+
         plm_pred <- predict(plm, type = "coef")
         if(remat.is.of.dim.one){
           remat <- remat[,-1, drop = FALSE]
@@ -223,44 +230,56 @@ plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
         }
         r_squared = plm$dev.ratio
       }
-      
-      plm_pred_names <- c("interc", colnames(remat))
-      
+
+      plm_pred_names <- c("Baseline  ", colnames(remat))
+
       return_char <- character()
-      
+
       for (i in 1:length(plm_pred)) {
         return_char <- paste0(return_char,
                               substr(plm_pred_names[i], 1, beta.char.len), " ",
-                              round(plm_pred[i], 2), "<br>")
+                              100*round(plm_pred[i], 2),"%", "\n")
       }
-      nodes$title[leaf_id] <- paste0(nodes$label[leaf_id],
-                                     "<br> R2 = ",
-                                     r_squared,
-                                     "<br>========<br>",
+
+      # Pull last newline
+      return_char <- substr(return_char,1,nchar(return_char)-1)
+
+      nodes$title[leaf_id] <- paste0("Node ",leaf_node_count,"\n",nodes$label[leaf_id],
+                                     #"\n R2 = ",
+                                     #r_squared,
+                                     "\n========\n",
                                      return_char)
-      nodes$label[leaf_id] <- paste0(nodes$label[leaf_id],
-                                     "\n R2 = ",
-                                     round(r_squared, 3),
-                                     "\n=======\nm = ",
-                                     round(mean(dta_y[leaf_idx[[leaf_id]]]), 5))
+      #nodes$label[leaf_id] <- paste0(nodes$label[leaf_id])#,
+                                     #"\n R2 = ",
+                                     #round(r_squared, 3),
+                                     #"\n=======\nm = ",
+                                     #round(mean(dta_y[leaf_idx[[leaf_id]]]), 5))
+      nodes$label = nodes$title
+
+      nodes$color[leaf_id]  <- as.character(color_code$color[
+        which.min((color_code$value - round(plm_pred[5,] * 100, 1))^2)])
+
+      leaf_node_count <- leaf_node_count + 1
     }
+
+    #nodes$color[-node_info$node_id[node_info$is_leaf]] <- "#FFFFFF"
   } else {
     # not ridge forest
-    for (leaf_id in node_info$node_id[node_info$is_leaf]) {
-      nodes$label[leaf_id] <- paste0(nodes$label[leaf_id], "\n=======\nm = ",
-                                     round(mean(dta_y[leaf_idx[[leaf_id]]]), 5))
-    }
+    # for (leaf_id in node_info$node_id[node_info$is_leaf]) {
+    #   nodes$label[leaf_id] <- paste0(nodes$label[leaf_id], "\n=======\nm = ",
+    #                                  round(mean(dta_y[leaf_idx[[leaf_id]]]), 5))
+    # }
   }
-  
+
   # defines a colors -----------------------------------------------------------
   split_vals <- node_info$split_feat
   split_vals <- ifelse(is.na(split_vals), 0, split_vals)
   split_vals <- factor(split_vals)
   color_code <- grDevices::terrain.colors(n = length(feat_names) + 1,
                                           alpha = .7)
-  names(color_code) <- as.character(0:(length(feat_names)))
-  nodes$color <- color_code[split_vals]
-  
+  #names(color_code) <- as.character(0:(length(feat_names)))
+  #nodes$color <- color_code[split_vals]
+
   # Plot the actual node -------------------------------------------------------
   (p1 <-
      visNetwork(
@@ -272,7 +291,7 @@ plot2 <- function(x, tree.id = 1, print.meta_dta = FALSE,
      ) %>%
      visEdges(arrows = "to") %>%
      visHierarchicalLayout() %>% visExport(type = "pdf", name = "ridge_tree"))
-  
+
   if (print.meta_dta) print(node_info)
   return(p1)
 }
