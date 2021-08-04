@@ -12,6 +12,11 @@ plotit <- function(x, tree.id = 1, print.meta_dta = FALSE,
   split_feat <- forestry_tree@R_forest[[tree.id]]$var_id
   split_val <- forestry_tree@R_forest[[tree.id]]$split_val
 
+  min_TE <- 2
+  max_TE <- 15
+  color_code <- data.frame(value = seq(min_TE, max_TE, length.out = 100))
+  color_code$color <- as.character(colorRampPalette(c("white", "green"))(100))
+
   # get info for the first node ------------------------------------------------
   root_is_leaf <- split_feat[1] < 0
   node_info <- data.frame(
@@ -186,6 +191,7 @@ plotit <- function(x, tree.id = 1, print.meta_dta = FALSE,
   nodes$label <- as.character(nodes$label)
   nodes$title <- as.character(nodes$label)
 
+  nodes$color <- rep("#FFFFFF", nrow(nodes))
 
   dta_x <- forestry_tree@processed_dta$processed_x
   dta_y <- forestry_tree@processed_dta$y
@@ -224,19 +230,19 @@ plotit <- function(x, tree.id = 1, print.meta_dta = FALSE,
         r_squared = plm$dev.ratio
       }
 
-      plm_pred_names <- c("interc", colnames(remat))
+      plm_pred_names <- c("Baseline  ", colnames(remat))
 
       return_char <- character()
 
       for (i in 1:length(plm_pred)) {
         return_char <- paste0(return_char,
                               substr(plm_pred_names[i], 1, beta.char.len), " ",
-                              round(plm_pred[i], 2), "\n")
+                              100*round(plm_pred[i], 2),"%", "\n")
       }
       nodes$title[leaf_id] <- paste0(nodes$label[leaf_id],
                                      #"\n R2 = ",
                                      #r_squared,
-                                     "\n========\nm",
+                                     "\n========\n",
                                      return_char)
       #nodes$label[leaf_id] <- paste0(nodes$label[leaf_id])#,
                                      #"\n R2 = ",
@@ -244,7 +250,12 @@ plotit <- function(x, tree.id = 1, print.meta_dta = FALSE,
                                      #"\n=======\nm = ",
                                      #round(mean(dta_y[leaf_idx[[leaf_id]]]), 5))
       nodes$label = nodes$title
+
+      nodes$color[leaf_id]  <- as.character(color_code$color[
+        which.min((color_code$value - round(plm_pred[5,] * 100, 1))^2)])
     }
+
+    #nodes$color[-node_info$node_id[node_info$is_leaf]] <- "#FFFFFF"
   } else {
     # not ridge forest
     # for (leaf_id in node_info$node_id[node_info$is_leaf]) {
@@ -259,8 +270,8 @@ plotit <- function(x, tree.id = 1, print.meta_dta = FALSE,
   split_vals <- factor(split_vals)
   color_code <- grDevices::terrain.colors(n = length(feat_names) + 1,
                                           alpha = .7)
-  names(color_code) <- as.character(0:(length(feat_names)))
-  nodes$color <- color_code[split_vals]
+  #names(color_code) <- as.character(0:(length(feat_names)))
+  #nodes$color <- color_code[split_vals]
 
   # Plot the actual node -------------------------------------------------------
   (p1 <-
