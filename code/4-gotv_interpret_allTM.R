@@ -124,11 +124,11 @@ source(file = "code/4-gotv_S_plot_fkt.R")
 plotit(x = rft, tree.id = 1)
 ggsave(filename = "figures/trees_new/tree1.pdf")
 plotit(x = rft, tree.id = 2)
-ggsave(filename = "figures/trees_new/tree1.pdf")
+ggsave(filename = "figures/trees_new/tree2.pdf")
 plotit(x = rft, tree.id = 3)
-ggsave(filename = "figures/trees_new/tree1.pdf")
+ggsave(filename = "figures/trees_new/tree3.pdf")
 plotit(x = rft, tree.id = 4)
-ggsave(filename = "figures/trees_new/tree1.pdf")
+ggsave(filename = "figures/trees_new/tree4.pdf")
 
 
 # 3. Create 6 nice looking trees with the same message
