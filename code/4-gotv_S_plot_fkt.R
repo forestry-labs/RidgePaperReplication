@@ -198,6 +198,7 @@ plotit <- function(x, tree.id = 1, print.meta_dta = FALSE,
 
   if (forestry_tree@linear) {
     # ridge forest
+    leaf_node_count <- 1
     for (leaf_id in node_info$node_id[node_info$is_leaf]) {
       # leaf_id = 1
       ###
@@ -239,7 +240,11 @@ plotit <- function(x, tree.id = 1, print.meta_dta = FALSE,
                               substr(plm_pred_names[i], 1, beta.char.len), " ",
                               100*round(plm_pred[i], 2),"%", "\n")
       }
-      nodes$title[leaf_id] <- paste0(nodes$label[leaf_id],
+
+      # Pull last newline
+      return_char <- substr(return_char,1,nchar(return_char)-1)
+
+      nodes$title[leaf_id] <- paste0("Node ",leaf_node_count,"\n",nodes$label[leaf_id],
                                      #"\n R2 = ",
                                      #r_squared,
                                      "\n========\n",
@@ -253,6 +258,8 @@ plotit <- function(x, tree.id = 1, print.meta_dta = FALSE,
 
       nodes$color[leaf_id]  <- as.character(color_code$color[
         which.min((color_code$value - round(plm_pred[5,] * 100, 1))^2)])
+
+      leaf_node_count <- leaf_node_count + 1
     }
 
     #nodes$color[-node_info$node_id[node_info$is_leaf]] <- "#FFFFFF"
