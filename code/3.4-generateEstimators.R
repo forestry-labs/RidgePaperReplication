@@ -293,6 +293,30 @@ estimator_grid[["caretRidgeRF_nonstrict"]] <- function(Xobs,
 
 }
 
+
+estimator_grid[["ridgeRF"]] <- function(Xobs,
+                                        Yobs,
+                                        tune_length = 200,
+                                        cv_fold = 8,
+                                        note = NA,
+                                        paramList = NA) {
+  library(Rforestry)
+
+  fit <- forestry(x = Xobs,
+                  y = Yobs,
+                  linear = TRUE,
+                  nodesizeSpl = 50,
+                  nodesizeAvg = 50,
+                  nodesizeStrictAvg = 25,
+                  nthread = 1,
+                  nodesizeStrictSpl = 25,
+                  overfitPenalty = 1,
+                  saveable = FALSE)
+
+  return(list("random_rf" = fit))
+
+}
+
 # Tune Ridge Tree --------------------------------------------------------------
 estimator_grid[["caretRidgeTree"]] <- function(Xobs,
                                                Yobs,
@@ -1342,6 +1366,10 @@ predictor_grid <- list(
   },
 
   "ridgeRFStepLinear"= function(estimator, feat) {
+    return(predict(estimator, feat)$random_rf)
+  }
+
+  "ridgeRF" = function(estimator, feat) {
     return(predict(estimator, feat)$random_rf)
   }
 )
