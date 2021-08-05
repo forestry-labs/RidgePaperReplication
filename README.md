@@ -66,10 +66,11 @@ The plot will then be found in `figures`.
 The code to generate the figures from Section 4 can be found in `code/4-gotv_interpret_allTM.R`.
 This relies on the data in `data/GerberGreenLarimer_APSR.csv`.
 
-# Appendix Results
+# Appendix A: Comparative Example
 
 The code to generate the figure from Appendix A can be found in `code/X_3-generateComparativeExample.R`.
 
+<<<<<<< HEAD
 
 
 # Selected Hyperparameters
@@ -129,5 +130,11 @@ Friedman 1 & 9 & 16 & 0.23 & -3.86 & 0.91 \\
 
 
 $$
+=======
+# Appendix I: Variable Importance Comparison
+
+The code to generate the figures in Appendix I can be found in `code/X_9-variable_importances.R`.
+The figures from this simulation will be saved in `figures`.
+>>>>>>> f6fe5572b2e677ec92a5213832f38645b78af5dd
 
 
