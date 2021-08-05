@@ -17,8 +17,8 @@ run_sim <- function(seed) {
   # Generate nonlinear DGP with 10 covariates ==================================
   n <- 1000
   x <- data.frame(matrix(rnorm(n*p), ncol = p, nrow = n))
-  y <- sapply(x[,1], nonlinear_func)*sapply(x[,2], nonlinear_func) +
-    sapply(x[,3], nonlinear_func)*sapply(x[,4], nonlinear_func)
+  y <- 2*sapply(x[,1], nonlinear_func)*sapply(x[,2], nonlinear_func) +
+    2*sapply(x[,3], nonlinear_func) + 3*sapply(x[,4], nonlinear_func)
   data <- data.frame(x,y)
 
   # Train a LRF ================================================================
@@ -52,6 +52,7 @@ for (rep_i in 1:100) {
   print(expr)
   results$lrf[rep_i] <- expr[["LRF"]]
   results$rf[rep_i] <- expr[["RF"]]
+  print(paste0("Rep ", rep_i))
 
 }
 
