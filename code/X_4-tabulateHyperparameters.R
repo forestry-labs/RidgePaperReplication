@@ -8,11 +8,12 @@ library(Cubist)
 library(caret)
 library(xtable)
 
-data_folder_name <- "replicationCode/tuningParam/"
+data_folder_name <- "code/tuningParam/"
 
-source("replicationCode/1.8-generateDataBrieman.R")
-source("replicationCode/1.9-DS_autos_bike_soe.R")
-source("replicationCode/1.7-generateDataVaryingN.R")
+source("code/3.1-generateDataVaryingN.R")
+source("code/3.2-generateDataBrieman.R")
+source("code/3.3-DS_autos_bike_soe.R")
+
 
 set.seed(634801)
 

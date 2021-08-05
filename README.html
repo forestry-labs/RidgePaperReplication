@@ -170,26 +170,29 @@ pre code {
 <div id="ridge-paper-replication" class="section level1">
 <h1>Ridge Paper Replication</h1>
 <p>This repository contains the necessary code to replicate the results from the most recent version of the paper: “Linear Aggregation in Tree-based Estimators.” This draft can be found at: <a href="https://arxiv.org/abs/1906.06463" class="uri">https://arxiv.org/abs/1906.06463</a>.</p>
-<p>In order to run the replication code, the <em>Rforestry</em> package is required. The <em>Rforestry</em> package can be installed using:</p>
+<p>In order to run the replication code, the <strong>Rforestry</strong> package is required. The <strong>Rforestry</strong> package can be installed using:</p>
 <pre><code>install.packages(&quot;Rforestry&quot;)</code></pre>
 </div>
 <div id="introduction-figure" class="section level1">
 <h1>Introduction Figure</h1>
 <p>The script to recreate Figure 1 can be found in <code>code/1-createIntoFigure.R</code>.</p>
 </div>
-<div id="replicating-simulations" class="section level1">
-<h1>Replicating Simulations</h1>
-<p>In order to replicate the simulations in Section 3, we provide the scripts in the <code>code/</code> folder. For the paper, we tuned the hyperparameters for each estimator using the <em>caret</em> package, and averaged the results over four runs. The hyperparameters found by <em>caret</em> can be found in the <code>tuningParam</code> folder. This takes a long time even when running on the cluster, so we have currently configured the code to use the hyperparameters selected by <em>caret</em>, and only run once. This should make the results run much quicker on either a personal computer, or the cluster.</p>
+<div id="performance-simulations" class="section level1">
+<h1>Performance Simulations</h1>
+<p>In order to replicate the simulations in Section 3, we provide the scripts in the <code>code/</code> folder. For the paper, we tuned the hyperparameters for each estimator using the <strong>caret</strong> package, and averaged the results over four runs. The hyperparameters found by <strong>caret</strong> can be found in the <code>tuningParam</code> folder. This takes a long time even when running on the cluster, so we have currently configured the code to use the hyperparameters selected by <strong>caret</strong>, and only run once. This should make the results run much quicker on either a personal computer, or the cluster.</p>
 <p>In order to run all the simulations for Section 3 on a SLURM cluster, one should run:</p>
 <pre><code>sbatch jobs/submit_performance_sims.sh</code></pre>
 <p>In order to run all simulations locally, one should run:</p>
 <pre><code>Rscript code/3-run_all_sims.R</code></pre>
-<p>In order to run the simulation on a cluster, using the hyperparameters selected by <em>caret</em>, one should run the script <code>jobs/submit_performance_sims.sh</code>.</p>
-<p>In order to retune the hyperparameters, one can switch <code>code/3-run_all_sims.R</code> to use <code>batch_func(i = i, force = TRUE, run_saved = FALSE)</code>. This takes a very long time to run for all estimators and data sets and we don’t recommend running this locally.</p>
+<p>In order to run the simulation on a cluster, using the hyperparameters selected by <strong>caret</strong>, one should run the script <code>jobs/submit_performance_sims.sh</code>.</p>
+<p>In order to retune the hyperparameters, one can switch the final block in <code>code/3-run_all_sims.R</code> to use <code>batch_func(i = i, force = TRUE, run_saved = FALSE)</code>. This takes a very long time to run for all estimators and data sets and we don’t recommend running this locally.</p>
 <p>The results will then be saved in <code>results</code>, and in order to create Figure 2 and Table 2, one should run:</p>
 <pre><code>Rscript code/3-plot_varyingN.R 
 Rscript code/3-plot_table_out.R</code></pre>
 <p>Then the plots can be found in <code>figures</code>.</p>
+</div>
+<div id="high-dimensional-simulations" class="section level1">
+<h1>High Dimensional Simulations</h1>
 <p>In order to run the high dimensional simulations from Section 3.4, one should run the script <code>jobs/high_dim.sh</code>.</p>
 <p>The random seeds used for different Monte Carlo runs can be found in <code>seeds.txt</code>. If one wants to run more replications, this should be edited to include the additional seeds.</p>
 <p>The plots can then be created using:</p>
@@ -203,6 +206,12 @@ Rscript code/3-plot_table_out.R</code></pre>
 <div id="appendix-results" class="section level1">
 <h1>Appendix Results</h1>
 <p>The code to generate the figure from Appendix A can be found in <code>code/X_3-generateComparativeExample.R</code>.</p>
+</div>
+<div id="selected-hyperparameters" class="section level1">
+<h1>Selected Hyperparameters</h1>
+<p>For the performance simulations in Section 3, we tune the hyperparameters for each estimator over a random grid of size 100. The final hyperparameters selected for each estimator can be found in the <code>tuningParam</code> folder. Below is a table of the hyperparameters selected for LRF in each data set.</p>
+<p>$$</p>
+<p>$$</p>
 </div>
 
 

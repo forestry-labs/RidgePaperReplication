@@ -4,6 +4,7 @@
 # library(forestry)
 library(visNetwork)
 library(tidyverse)
+library(Rforestry)
 
 # load("GerberGreenLarimer_r1b.RData", verbose = TRUE)
 social <- read.csv(file = "data/GerberGreenLarimer_APSR.csv")
@@ -21,7 +22,7 @@ social <- tbl_df(social)[,-1] %>%
     age = 2008-yob,
     y = ifelse(voted == "Yes", 1, 0)
   ) %>%
-  select(y, WC, WH, WS, WN, g2000, g2002, p2000, p2002, p2004, age)
+  dplyr::select(y, WC, WH, WS, WN, g2000, g2002, p2000, p2002, p2004, age)
 
 social$p2004 <- gsub("N","n", gsub("Y","y",social$p2004))
 social$CVH <- apply(social[, c("g2000", "g2002", "p2000", "p2002", "p2004")] == "yes", 1, sum)
@@ -103,7 +104,7 @@ summary(social)
 # }
 
 # Tree 2: Slearner and we look at W: -------------------------------------------
-rft <- forestry(x = as.data.frame(social %>% select(-y)),
+rft <- forestry(x = as.data.frame(social %>% dplyr::select(-y)),
                 y = social$y,
                 mtry = ncol(social) - 1,
                 sample.fraction = 1,
@@ -133,3 +134,57 @@ plotit(x = rft, tree.id = 4)
 
 # 3. Create 6 nice looking trees with the same message
 # 4. Write that it is important to create many trees + honesty
+
+# get the different OOB ========================================================
+rft <- forestry(x = as.data.frame(social %>% dplyr::select(-y)),
+                y = social$y,
+                mtry = ncol(social) - 1,
+                sample.fraction = 1,
+                nodesizeStrictSpl = 10000,
+                ntree = 1,
+                minSplitGain = .005,
+                linear = TRUE,
+                overfitPenalty = 1e-8,
+                linFeats = 1:4,
+                middleSplit = TRUE,
+                verbose = FALSE,
+                splitratio = .5)
+
+getOOB(rft)
+
+rf <- forestry(x = as.data.frame(social %>% dplyr::select(-y)),
+               y = social$y,
+               mtry = ncol(social) - 1,
+               sample.fraction = 1,
+               nodesizeStrictSpl = 100,
+               ntree = 1,
+               linear = FALSE,
+               maxDepth = 100,
+               splitratio = .5)
+
+getOOB(rf)
+
+
+# Get the forest wide correlations =============================================
+
+all_data <- data.frame(dummy = 1:344084)
+
+for ( i in 1:10) {
+  rft <- forestry(x = as.data.frame(social %>% dplyr::select(-y)),
+                  y = social$y,
+                  mtry = ncol(social) - 1,
+                  sample.fraction = 1,
+                  nodesizeStrictSpl = 10000,
+                  ntree = 1,
+                  minSplitGain = .005,
+                  linear = TRUE,
+                  overfitPenalty = 1e-8,
+                  linFeats = 1:4,
+                  middleSplit = TRUE,
+                  verbose = FALSE,
+                  splitratio = .5)
+
+  p_i <- predict(rft, newdata = as.data.frame(social %>% dplyr::select(-y)))
+  all_data <- cbind(all_data, p_i)
+}
+
