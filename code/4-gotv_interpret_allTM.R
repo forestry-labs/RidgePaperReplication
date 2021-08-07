@@ -45,7 +45,8 @@ social <- social %>%
          "Neighbor  " = WN,
          "Total Elections" = CVH,
          "Total General \n Elections" = CGVH,
-         "Total Primary \n  Elections" = CPVH)
+         "Total Primary \n  Elections" = CPVH,
+         "\n        Age        \n" = age)
 
 summary(social)
 
