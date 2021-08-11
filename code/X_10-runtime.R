@@ -12,6 +12,7 @@ library(doParallel)
 
 # Generate Data for runtime comparison =========================================
 source("code/3.4-generateDataTiming.R")
+source("code/3.4-generateEstimators.R")
 
 # generate all the different jobs and save it ----------------------------------
 (ds_names <- names(datasets_grid))
@@ -24,6 +25,8 @@ source("code/3.4-generateDataTiming.R")
 all_jobs$EMSE <- NA
 all_jobs$runtime <- NA
 
+# Only get RidgeRF jobs
+all_jobs <- all_jobs[which(all_jobs$Estimator == "ridgeRF"),]
 
 # update EMSE table ------------------------------------------------------------
 update_tables <- function(){
@@ -31,8 +34,8 @@ update_tables <- function(){
   # in 3-run_all_cluster_results.csv
 
   # updates all_jobs
-  for (file in dir("timing_results/")) {
-    results <- read.csv(paste0("timing_results/", file))
+  for (file in dir("code/timing_results/")) {
+    results <- read.csv(paste0("code/timing_results/", file))
     this_row <-
       as.character(all_jobs$Dataset) == as.character(results$Dataset) &
       as.character(all_jobs$Estimator) == as.character(results$Estimator)
@@ -76,7 +79,7 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
     run_saved = FALSE
   }
 
-  if ((!substr(filename, 15, 1000) %in% dir("timing_results")) |
+  if ((!substr(filename, 16, 1000) %in% dir("code/timing_results")) ||
       force) {
 
     ds <- datasets_grid[[as.character(this_job$Dataset)]]
@@ -201,13 +204,13 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
       pdctns <- pd(estimator = es_trnd,
                    feat = ds$test %>% dplyr::select(-y))
       EMSE <- mean((pdctns - ds$test %>% dplyr::select(y) %>% .[,1])^2)
-    }, times = 10, unit = "s")
+    }, times = 100, unit = "s")
     this_job$EMSE <- EMSE
     this_job$runtime <- summary(tm)$mean
 
     # save the job
     write.csv(x = this_job,
-              file = filename,
+              file = paste0("code/",filename),
               row.names = FALSE)
     print(this_job)
     print(filename)
@@ -217,30 +220,6 @@ batch_func <- function(i, force = FALSE, run_saved = FALSE){
   }
   return(filename)
 }
-
-# Test the run_saved functionality for each estimator
-# print(paste("RUNNING", all_jobs[1, 1], "----", all_jobs[1, 2]))
-# batch_func(i = 1, force = TRUE, run_saved = TRUE)
-#
-# print(paste("RUNNING", all_jobs[45, 1], "----", all_jobs[45, 2]))
-# batch_func(i = 45, force = TRUE, run_saved = TRUE)
-#
-# print(paste("RUNNING", all_jobs[80, 1], "----", all_jobs[80, 2]))
-# batch_func(i = 80, force = TRUE, run_saved = TRUE)
-#
-# print(paste("RUNNING", all_jobs[211, 1], "----", all_jobs[211, 2]))
-# batch_func(i = 211, force = TRUE, run_saved = TRUE)
-#
-# print(paste("RUNNING", all_jobs[217, 1], "----", all_jobs[217, 2]))
-# batch_func(i = 217, force = TRUE, run_saved = TRUE)
-#
-# print(paste("RUNNING", all_jobs[176, 1], "----", all_jobs[176, 2]))
-# batch_func(i = 176, force = TRUE, run_saved = TRUE)
-#
-# print(paste("RUNNING", all_jobs[109, 1], "----", all_jobs[109, 2]))
-# batch_func(i = 109, force = TRUE, run_saved = TRUE)
-
-
 
 # Set tables before running simulations
 update_tables()

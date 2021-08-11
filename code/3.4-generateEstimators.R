@@ -305,11 +305,12 @@ estimator_grid[["ridgeRF"]] <- function(Xobs,
   fit <- forestry(x = Xobs,
                   y = Yobs,
                   linear = TRUE,
-                  nodesizeSpl = 50,
-                  nodesizeAvg = 50,
-                  nodesizeStrictAvg = 25,
+                  ntree=1,
+                  nodesizeSpl = 1,
+                  nodesizeAvg = 1,
+                  nodesizeStrictAvg = 1,
+                  nodesizeStrictSpl = 1,
                   nthread = 1,
-                  nodesizeStrictSpl = 25,
                   overfitPenalty = 1,
                   saveable = FALSE)
 
@@ -1367,10 +1368,10 @@ predictor_grid <- list(
 
   "ridgeRFStepLinear"= function(estimator, feat) {
     return(predict(estimator, feat)$random_rf)
-  }
+  },
 
   "ridgeRF" = function(estimator, feat) {
-    return(predict(estimator, feat)$random_rf)
+    return(predict(estimator$random_rf, feat))
   }
 )
 
