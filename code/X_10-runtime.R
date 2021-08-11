@@ -11,6 +11,11 @@ library(foreach)
 library(doParallel)
 
 # Generate Data for runtime comparison =========================================
+
+# You need the R only version of the Rforestry package in order to run the
+# LRF trees with the naive implementation. This can be installed using
+# devtools::install_github("theo-s/Rforestry_R")
+require("forestryR")
 source("code/3.4-generateDataTiming.R")
 source("code/3.4-generateEstimators.R")
 
@@ -26,7 +31,7 @@ all_jobs$EMSE <- NA
 all_jobs$runtime <- NA
 
 # Only get RidgeRF jobs
-all_jobs <- all_jobs[which(all_jobs$Estimator == "ridgeRF"),]
+all_jobs <- all_jobs[which(all_jobs$Estimator %in% c("ridgeRF","RridgeRF")),]
 
 # update EMSE table ------------------------------------------------------------
 update_tables <- function(){
@@ -233,7 +238,7 @@ print("running things in parallel")
 # The following code will run all the simulations from Section 3
 # in order to only run a subset, one can call the batch_func
 # with the desired job_id's only
-foreach(i = which(all_jobs$Estimator %in% c("ridgeRF"))) %dopar% {
+foreach(i = which(all_jobs$Estimator %in% c("ridgeRF","RridgeRF"))) %dopar% {
   print(paste("RUNNING", all_jobs[i, 1], "----", all_jobs[i, 2]))
 
   # In order to run the simulations with hyperparameter tuning, change the

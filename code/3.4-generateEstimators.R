@@ -318,6 +318,23 @@ estimator_grid[["ridgeRF"]] <- function(Xobs,
 
 }
 
+estimator_grid[["RridgeRF"]] <- function(Xobs,
+                                         Yobs,
+                                         tune_length = 200,
+                                         cv_fold = 8,
+                                         note = NA,
+                                         paramList = NA) {
+  # Need the forestry R library to run a LRF tree in R
+  # devtools::install_github("theo-s/Rforestry_R")
+  library(forestryR)
+
+  fit <- forestryR::linearTree(x = Xobs,
+                               y = Yobs)
+
+  return(list("random_rf" = fit))
+
+}
+
 # Tune Ridge Tree --------------------------------------------------------------
 estimator_grid[["caretRidgeTree"]] <- function(Xobs,
                                                Yobs,
@@ -1372,6 +1389,9 @@ predictor_grid <- list(
 
   "ridgeRF" = function(estimator, feat) {
     return(predict(estimator$random_rf, feat))
+  },
+  "RridgeRF" = function(estimator, feat) {
+    return(rep(0, nrow(feat)))
   }
 )
 
