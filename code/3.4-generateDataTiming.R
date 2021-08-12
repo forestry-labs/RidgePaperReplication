@@ -19,8 +19,8 @@ data_gen <- function(n,p) {
 
 datasets_grid <- list()
 
-ranges <- expand.grid(c(5,10,20,40,80), c(100))
-ranges <- rbind(ranges, expand.grid(c(10), c(200,400,800,1600)))
+ranges <- expand.grid(c(5,10,20,40,80,160), c(100))
+ranges <- rbind(ranges, expand.grid(c(10), c(200,400,800,1600,3200)))
 colnames(ranges) <- c("p","n")
 
 for (i in 1:nrow(ranges)) {

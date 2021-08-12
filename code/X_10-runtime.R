@@ -244,7 +244,7 @@ foreach(i = which(all_jobs$Estimator %in% c("ridgeRF","RridgeRF"))) %dopar% {
   # In order to run the simulations with hyperparameter tuning, change the
   # run_saved flag to FALSE. This may take a very long time however
 
-  batch_func(i = i, force = TRUE, run_saved = FALSE)
+  batch_func(i = i, force = FALSE, run_saved = FALSE)
   print(paste("Done with", all_jobs[i,1], "----", all_jobs[i,2]))
 }
 
