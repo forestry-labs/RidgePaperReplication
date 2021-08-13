@@ -37,10 +37,10 @@ ggplot(data = data.frame(Variable = 1:100, value = mean_coefs[-101]),
   geom_text_repel(
     aes(label = variable),
     data = val,
-    size = 3, force = 4,arrow = arrow(length = unit(0.01, "npc")),
-    direction = "both", nudge_x = 20, nudge_y =0, point.padding = .7
+    size = 3.5, force = 1,arrow = arrow(length = unit(0.01, "npc")),
+    direction = "both", nudge_x = 7, nudge_y =-.0019, point.padding = .8
   )+
   geom_hline(yintercept=1.96*mean_sd, linetype="dashed", color = "red")+
   ylim(c(0,.012))+
   labs(x = "Variable", y = "Mean Ridge Coefficient")
-ggsave(filename = "figures/high_dim_coefficients.pdf", height = 4, width = 5)
+ggsave(filename = "figures/high_dim_coefficients.pdf", height = 4, width = 7)
