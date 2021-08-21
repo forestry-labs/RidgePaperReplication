@@ -1,10 +1,13 @@
 library(ggplot2)
 library(reshape2)
+library(dplyr)
+library(viridis)
 
 runtimes <- read.csv(file = "code/X_10-runtimeRuntime.csv")
 
 
 p_range <- c(5,10,20,40,80,160)#,160)
+colors <- viridis(3)
 
 data.frame(P = p_range,
            LRF = runtimes$ridgeRF[1:length(p_range)],
@@ -15,12 +18,13 @@ x$variable <- plyr::revalue(x$variable, c("Naive" = "Naive Algorithm",
                                         "LRF" = "LRF Algorithm"))
 
 x %>%
-  rename(c("variable"="Algorithm")) %>%
+  rename(c("Algorithm"="variable")) %>%
   ggplot(aes(x = P, y = value, color = Algorithm))+
   geom_line()+
   theme_bw() +
   xlab("Dimension") +
-  ylab("Runtime (seconds)")
+  ylab("Runtime (seconds)")+
+  scale_color_manual(values=colors[1:2])
 
 ggsave(filename = "figures/runtimeP.pdf")
 
@@ -36,11 +40,12 @@ x$variable <- plyr::revalue(x$variable, c("Naive" = "Naive Algorithm",
                                           "LRF" = "LRF Algorithm"))
 
 x %>%
-  rename(c("variable"="Algorithm")) %>%
+  rename(c("Algorithm"="variable")) %>%
   ggplot(aes(x = N, y = value, color = Algorithm))+
   geom_line()+
   theme_bw() +
   xlab("Sample Size") +
-  ylab("Runtime (seconds)")
+  ylab("Runtime (seconds)")+
+  scale_color_manual(values=colors[1:2])
 
 ggsave(filename = "figures/runtimeN.pdf")
