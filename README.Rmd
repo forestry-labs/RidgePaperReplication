@@ -1,0 +1,121 @@
+# Ridge Paper Replication
+
+This repository contains the necessary code to replicate the results from the most recent version of the paper: "Linear Aggregation in Tree-based Estimators." 
+This draft can be found at: https://arxiv.org/abs/1906.06463.
+
+In order to run the replication code, the **Rforestry** package is required.
+The **Rforestry** package can be installed from CRAN using:
+```
+install.packages("Rforestry")
+```
+Development versions of the package can be found at: https://github.com/forestry-labs/Rforestry.
+
+# Section 1
+
+The script to recreate Figure 1 can be found in `code/1-createIntoFigure.R`.
+The plot can be created by running:
+```
+Rscript code/1-createIntoFigure.R
+```
+The figure can then be found in the `figures/` folder.
+
+# Section 3
+
+In order to replicate the performance simulations in Section 3, we provide the scripts in the `code/` folder.
+For the paper, we tuned the hyperparameters for each estimator using the **caret** package, and 
+averaged the results over four runs.
+The hyperparameters found by **caret** can be found in the `tuningParam` folder.
+This takes a long time even when running on the cluster, so we have currently configured
+the code to use the hyperparameters selected by **caret**, and only run once. 
+This should make the results run much quicker on either a personal computer, or the cluster.
+
+In order to run all the simulations for Section 3 on a SLURM cluster, one should run:
+```
+sbatch jobs/submit_performance_sims.sh
+```
+In order to run all simulations locally, one should run:
+```
+Rscript code/3-run_all_sims.R
+```
+In order to run the simulation on a cluster, using the hyperparameters selected by **caret**,
+one should run the script `jobs/submit_performance_sims.sh`.
+
+In order to retune the hyperparameters, one can switch the final block in `code/3-run_all_sims.R` to use `batch_func(i = i, force = TRUE, run_saved = FALSE)`. 
+This takes a very long time to run for all estimators and data sets and we don't recommend running this locally.
+
+The results will then be saved in `results`, and in order to create Figure 2 and Table 2, 
+one should run:
+```
+Rscript code/3-plot_varyingN.R 
+Rscript code/3-plot_table_out.R
+```
+Then the plots can be found in `figures`.
+
+# Section 3.4
+
+In order to run the high dimensional simulations from Section 3.4, one should run the 
+script `jobs/high_dim.sh`.
+
+The random seeds used for different Monte Carlo runs can be found in `seeds.txt`.
+If one wants to run more replications, this should be edited to include the additional seeds.
+
+The plots can then be created using:
+
+```
+Rscript code/1-plot_high_dimensional.R
+```
+The plot will then be found in the `figures/` folder.
+
+# Selected Hyperparameters
+
+For the performance simulations in Section 3, we tune the hyperparameters for each estimator over a random grid of size 100. 
+The final hyperparameters selected for each estimator can be found in the `tuningParam` folder.
+Below is a table of the hyperparameters selected for LRF in each data set.
+
+```{r echo = FALSE, results='asis'}
+
+library(knitr)
+plot <- read.csv("code/hyperparams.csv")
+colnames(plot) <- c("X","Dataset","mtry","nodesizeSpl","overfitPenalty","Log(minSplitGain)","sample.fraction")
+kable(plot[,-1], caption = "Hyperparameters selected for LRF by caret in Section 3")
+
+```
+
+# Section 4
+
+The code to generate the figures from Section 4 can be found in `code/4-gotv_interpret_allTM.R`.
+This relies on the data in `data/GerberGreenLarimer_APSR.csv`.
+
+# Appendix A
+
+The code to generate the comparison figure from Appendix A can be found in 
+`code/X_3-generateComparativeExample.R`.
+This can be created by running:
+```
+Rscript code/X_3-generateComparativeExample.R
+```
+The figure can then be found in the `figures/` folder.
+
+# Appendix I
+
+The code to generate the figures in Appendix I can be found in `code/X_9-variable_importances.R`.
+This can be created by running:
+```
+Rscript code/X_9-variable_importances.R
+```
+The two figures from this simulation will be saved in the `figures/` folder.
+
+# Appendix J
+
+The code to run the runtime experiment in Appendix J can be found in `code/X_10-runtime.R`.
+In order to run the naive algorithm, one must have install the R package at: https://github.com/theo-s/Rforestry_R.
+This can be installed using:
+```
+devtools::install_github("theo-s/Rforestry_R")
+```
+Figure 8 can be generated using:
+```
+Rscript code/X_10-plot_runtime.R
+```
+The figure can then be found in the `figures/` folder.
+

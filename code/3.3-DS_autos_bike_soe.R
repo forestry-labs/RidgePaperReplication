@@ -5,7 +5,7 @@ library(readr)
 set.seed(6318154)
 
 # Import autos -----------------------------------------------------------------
-autos <- read_csv("replicationCode/data/autos.csv")
+autos <- read_csv("data/autos.csv")
 autos$seller <- as.factor(autos$seller)
 autos$abtest <- as.factor(autos$abtest)
 autos$gearbox <- as.factor(autos$gearbox)
@@ -69,11 +69,11 @@ datasets_grid[["autos"]] <- list(
 
 # Import bike ------------------------------------------------------------------
 
-bike <- read_csv("replicationCode/data/bike.csv")
+bike <- read_csv("data/bike.csv")
 
 
 
-bike <- bike %>% 
+bike <- bike %>%
   dplyr::select(-instant,-dteday,-casual, -registered, -weekday, -season) %>%
   mutate(
     holiday = factor(holiday),

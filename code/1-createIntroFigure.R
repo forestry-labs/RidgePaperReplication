@@ -1,5 +1,4 @@
 # devtools::install_github("soerenkuenzel/forestry")
-setwd("~/Dropbox/RidgePaperReplication/1-Introduction")
 set.seed(534325421)
 library(tidyverse)
 library(reshape)
@@ -31,66 +30,66 @@ plot(X_to_predict[, 1], mu_truth)
 # vanilla forest ---------------------------------------------------------------
 forest_vanilla <- forestry(
   X,
-  y, 
+  y,
   mtry = 1,
-  ntree = 1, 
+  ntree = 1,
   nodesizeSpl = 50)
 
-pred_vanilla <- predict(forest_vanilla, feature.new = X_to_predict)
+pred_vanilla <- predict(forest_vanilla, newdata = X_to_predict)
 
 
 # forestry ---------------------------------------------------------------------
 forest_ridge <- forestry(
   X,
-  y, 
+  y,
   mtry = 1,
   ntree = 1,
   nodesizeStrictSpl = 20,
-  ridgeRF = TRUE, 
+  linear = TRUE,
   sample.fraction = 1,
   replace = FALSE,
   overfitPenalty = .01
 )
 
-pred_ridge <- predict(forest_ridge, feature.new = X_to_predict)
+pred_ridge <- predict(forest_ridge, newdata = X_to_predict)
 
 # Plot data --------------------------------------------------------------------
 # v1
 p_fitted <- data.frame(
-  x = X_to_predict[,1], 
-  truth = mu_truth, 
-  RF_vanilla = pred_vanilla, 
+  x = X_to_predict[,1],
+  truth = mu_truth,
+  RF_vanilla = pred_vanilla,
   RF_ridge = pred_ridge
 ) %>% melt(id = "x") %>%
   dplyr::rename(predictor = variable, y = value) %>%
   mutate(predictor = as.character(predictor)) %>%
   mutate(predictor = ifelse(predictor == "RF_vanilla", "classical CART",
                      ifelse(predictor == "RF_ridge", "linear CART",predictor))) %>%
-  ggplot(aes(x = x, y = y, color = predictor, linetype = predictor, 
+  ggplot(aes(x = x, y = y, color = predictor, linetype = predictor,
              size = predictor)) +
   geom_line() +
-  scale_linetype_manual(values = c("truth" = "dotted", 
-                                   "linear CART" = "solid", 
+  scale_linetype_manual(values = c("truth" = "dotted",
+                                   "linear CART" = "solid",
                                    "classical CART" = "solid")) +
-  scale_size_manual(values = c("truth" = .5, 
-                                "linear CART" = .7, 
-                                "classical CART" = .7)) + 
-  scale_color_manual(values = c("truth" = "black", 
-                                "linear CART" = "green", 
-                                "classical CART" = "red")) +  
-  geom_point(aes(x = X, y = Y), data = data.frame(X = X[,1], Y = y), 
+  scale_size_manual(values = c("truth" = .5,
+                                "linear CART" = .7,
+                                "classical CART" = .7)) +
+  scale_color_manual(values = c("truth" = "black",
+                                "linear CART" = "green",
+                                "classical CART" = "red")) +
+  geom_point(aes(x = X, y = Y), data = data.frame(X = X[,1], Y = y),
              inherit.aes = FALSE, size = 0.3, alpha = .5) +
   theme_bw()
 p_fitted
-ggsave(filename = "001_IntroFigure_v1.pdf", plot = p_fitted, width = 6.4, 
-       height = 4)
+# ggsave(filename = "001_IntroFigure_v1.pdf", plot = p_fitted, width = 6.4,
+#        height = 4)
 
 
 # v2
 
 p_hist <- data.frame(X = X[,1], Y = y) %>%
-  ggplot(aes(x = X)) + 
-  geom_histogram(bins = 100) + 
+  ggplot(aes(x = X)) +
+  geom_histogram(bins = 100) +
   theme_bw()
 
 
@@ -130,16 +129,15 @@ p_histGP <- ggplotGrob(
     xlab("x") +
     scale_y_continuous(breaks = c(0, 10)))
 
-maxWidth = grid::unit.pmax(p_fittedGP$widths[2:5], 
+maxWidth = grid::unit.pmax(p_fittedGP$widths[2:5],
                            p_histGP$widths[2:5])
 p_fittedGP$widths[2:5] <- as.list(maxWidth)
 p_histGP$widths[2:5] <- as.list(maxWidth)
 
-
-
-pdf("001_IntroFigure_v2.pdf", width = 6.4, height = 4)
-
-grid.arrange(p_fittedGP, p_histGP, 
+plot <- arrangeGrob(p_fittedGP, p_histGP,
              ncol = 1, heights = c(3, 1.4))
+
+
+ggsave(filename = "figures/001_IntroFigure_v2.pdf", plot = plot, width = 6.4, height = 4)
 
 dev.off()

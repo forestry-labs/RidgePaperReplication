@@ -8,7 +8,7 @@ library(Cubist)
 library(caret)
 library(xtable)
 
-data_folder_name <- "code/tuningParam/"
+data_folder_name <- "tuningParam/"
 
 source("code/3.1-generateDataVaryingN.R")
 source("code/3.2-generateDataBrieman.R")
@@ -55,21 +55,27 @@ for (dataset_i in 1:length(datasets_grid)) {
 
     cur_params <- params[[1]]$bestTune
 
-    total_params <- total_params %>% add_row(Dataset = data_name,
-                                             mtry = cur_params$mtry[1],
-                                             nodesizeSpl = cur_params$nodesizeSpl[1],
-                                             overfitPenalty = cur_params$overfitPenalty[1],
-                                             LOGminSplitGain = cur_params$minSplitGain[1],
-                                             sample.fraction = cur_params$sample.fraction[1])
+    total_params <- rbind(total_params,c(data_name,
+                                         cur_params$mtry[1],
+                                         cur_params$nodesizeSpl[1],
+                                         cur_params$overfitPenalty[1],
+                                         cur_params$minSplitGain[1],
+                                         cur_params$sample.fraction[1]))
+    colnames(total_params) <-c("Dataset",
+                               "mtry",
+                               "nodesizeSpl",
+                               "overfitPenalty",
+                               "LOGminSplitGain",
+                               "sample.fraction")
 
 
 }
 
-total_params$LOGminSplitGain <- log(total_params$LOGminSplitGain)
+total_params$LOGminSplitGain <- log(total_params$LOGminSplitGain %>% as.numeric())
 
 tp_char <- total_params
 for (i in 2:ncol(tp_char)) {
-  tp_char[ , i] <- as.character(round(tp_char[ , i], 2))
+  tp_char[ , i] <- as.character(round(tp_char[ , i] %>% as.numeric(), 2))
 }
 
 tp_char$Dataset <- gsub("_", " ", tp_char$Dataset)
@@ -77,13 +83,4 @@ tp_char$Dataset <- gsub("-", " ", tp_char$Dataset)
 tp_char$Dataset <- gsub("simulated", "", tp_char$Dataset)
 tp_char$Dataset <- gsub("Function", "", tp_char$Dataset)
 
-print(
-  xtable(tp_char, align = rep('r', ncol(tp_char) + 1),
-         caption = "The table summarizes the selected hyperparameters.", label = "tbl:hyperparameters"),
-  include.rownames = FALSE,
-  # include.colnames = FALSE,
-  sanitize.colnames.function = identity,
-  sanitize.text.function = identity,
-  latex.environments = "flushleft",
-  file = "~/Dropbox/hyperparameters.tex"
-)
+write.csv(tp_char, file = "code/hyperparams.csv")

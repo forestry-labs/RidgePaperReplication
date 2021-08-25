@@ -4,8 +4,8 @@ library(Rforestry)
 
 data(ozone)
 Boston
-servo <- read.csv("replicationCode/data/servo.csv", header = TRUE)
-abalone <- read.csv("replicationCode/data/abalone.csv")
+servo <- read.csv("data/servo.csv", header = TRUE)
+abalone <- read.csv("data/abalone.csv")
 
 set.seed(3984938)
 
@@ -45,14 +45,14 @@ y <- y + ratio * noise
 
 friedman_2 <- cbind(x, y)
 # summary(friedman_2)
-# 
+#
 datasets_grid[["Friedman_2"]] <- list(
   "train" = friedman_2[train_id, ],
   "test" = friedman_2[test_id, ])
 
 # Friedman 3
 # Error SD selected to roughly give signal to noise ratio of 3:1
-# 
+#
 y <- atan( (x[,2]*x[,3] - (1/(x[,2]*x[,4]) )) / x[,1])
 
 noise <- rnorm(n)
@@ -92,8 +92,8 @@ flds <- caret::createFolds(Boston$y, k = 5, list = TRUE, returnTrain = FALSE)
 #   # i = 1
 #   test_id <- flds[[i]]
 #   train_id <- (1:n)[!(1:n) %in% test_id]
-# 
-# 
+#
+#
 #   datasets_grid[[paste0("aBoston_Housing_fold", i)]] <- list(
 #     "train" = b[train_id, ],
 #     "test" = b[test_id, ])
