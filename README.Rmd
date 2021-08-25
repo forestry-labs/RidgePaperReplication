@@ -1,3 +1,6 @@
+---
+output: github_document
+---
 # Ridge Paper Replication
 
 This repository contains the necessary code to replicate the results from the most recent version of the paper: "Linear Aggregation in Tree-based Estimators." 
