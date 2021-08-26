@@ -58,9 +58,10 @@ The results will then be saved in `results`, and in order to create
 Figure 2 and Table 2, one should run:
 
     Rscript code/3-plot_varyingN.R 
+    Rscript code/3-plot_additional_varyingN.R
     Rscript code/3-plot_table_out.R
 
-The plot will then be found in the `figures/` folder.
+The plots will then be found in the `figures/` folder.
 
 # Section 3.4
 
@@ -81,9 +82,9 @@ The plot will then be found in the `figures/` folder.
 
 For the performance simulations in Section 3, we tune the
 hyperparameters for each estimator over a random grid of size 100. The
-final hyperparameters selected for each estimator can be found in the
-`tuningParam` folder. Below is a table of the hyperparameters selected
-for LRF in each data set:
+final hyperparameters selected by **caret** for each estimator can be
+found in the `tuningParam` folder. Below is a table of the
+hyperparameters selected for LRF in each data set:
 
 | Dataset              | mtry | nodesizeSpl | overfitPenalty | Log(minSplitGain) | sample.fraction |
 |:---------------------|-----:|------------:|---------------:|------------------:|----------------:|
@@ -122,7 +123,7 @@ for LRF in each data set:
 | autos                |    5 |          18 |           0.80 |             -8.44 |            0.92 |
 | bike                 |    8 |          23 |           0.11 |             -6.78 |            0.97 |
 
-Hyperparameters selected for LRF by caret in Section 3
+Hyperparameters selected for LRF by **caret** in Section 3.
 
 # Section 4
 
