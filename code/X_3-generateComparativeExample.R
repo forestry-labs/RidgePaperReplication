@@ -56,7 +56,7 @@ data.frame(
                                 "GRF" = "red")) +
   theme_bw()
 
-#ggsave("figures/lrf_grf_comparison.pdf", width = 9, height = 5)
+ggsave("figures/lrf_grf_comparison.pdf", width = 9, height = 5)
 
 
 
