@@ -60,7 +60,7 @@ Figure 2 and Table 2, one should run:
     Rscript code/3-plot_varyingN.R 
     Rscript code/3-plot_table_out.R
 
-Then the plots can be found in `figures`.
+The plot will then be found in the `figures/` folder.
 
 # Section 3.4
 
@@ -83,7 +83,7 @@ For the performance simulations in Section 3, we tune the
 hyperparameters for each estimator over a random grid of size 100. The
 final hyperparameters selected for each estimator can be found in the
 `tuningParam` folder. Below is a table of the hyperparameters selected
-for LRF in each data set.
+for LRF in each data set:
 
 | Dataset              | mtry | nodesizeSpl | overfitPenalty | Log(minSplitGain) | sample.fraction |
 |:---------------------|-----:|------------:|---------------:|------------------:|----------------:|
@@ -128,7 +128,8 @@ Hyperparameters selected for LRF by caret in Section 3
 
 The code to generate the figures from Section 4 can be found in
 `code/4-gotv_interpret_allTM.R`. This relies on the data in
-`data/GerberGreenLarimer_APSR.csv`.
+`data/GerberGreenLarimer_APSR.csv` and the plotting function defined in
+`code/4-gotv_S_plot_fkt.R`.
 
 # Appendix A
 
@@ -143,9 +144,14 @@ The figure can then be found in the `figures/` folder.
 # Appendix I
 
 The code to generate the figures in Appendix I can be found in
-`code/X_9-variable_importances.R`. This can be created by running:
+`code/X_9-variable_importances.R`. To run the experiment and save the
+results, one should run:
 
     Rscript code/X_9-variable_importances.R
+
+The figures can be created by running:
+
+    Rscript code/X_9-plot_variable_importances.R
 
 The two figures from this simulation will be saved in the `figures/`
 folder.
