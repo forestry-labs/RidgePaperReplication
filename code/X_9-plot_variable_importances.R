@@ -14,12 +14,12 @@ data.frame(Var = factor(paste0("X",1:10), levels = unique(paste0("X",1:10))), Im
   geom_col()+
   theme_classic()+
   labs(y = "Normalized Variable Importance", x = "Variable")
-ggsave(filename = "figures/VI_lrf.pdf")
+ggsave(filename = "figures/VI_lrf.pdf", width = 4,height=3)
 
 data.frame(Var = factor(paste0("X",1:10), levels = unique(paste0("X",1:10))), Importance = rf.vi) %>%
   ggplot(aes(x=Var,y=Importance))+
   geom_col()+
   theme_classic()+
   labs(y = "Normalized Variable Importance", x = "Variable")
-ggsave(filename = "figures/VI_rf.pdf")
+ggsave(filename = "figures/VI_rf.pdf", width = 4,height=3)
 

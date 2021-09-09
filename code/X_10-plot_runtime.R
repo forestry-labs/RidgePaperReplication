@@ -26,7 +26,7 @@ x %>%
   ylab("Runtime (seconds)")+
   scale_color_manual(values=colors[1:2])
 
-ggsave(filename = "figures/runtimeP.pdf")
+ggsave(filename = "figures/runtimeP.pdf", width = 4, height=3)
 
 
 n_range <- c(100,200,400,800,1600,3200)#,160)
@@ -48,4 +48,4 @@ x %>%
   ylab("Runtime (seconds)")+
   scale_color_manual(values=colors[1:2])
 
-ggsave(filename = "figures/runtimeN.pdf")
+ggsave(filename = "figures/runtimeN.pdf", width = 4, height=3)
